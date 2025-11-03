@@ -1,0 +1,9 @@
+.env
+cogs/__pycache__
+data/__pycache__
+util/__pycache__
+data/guildconf.json
+data/royal_stats.json
+data/warns.json
+data/applied_presets.json
+venv/

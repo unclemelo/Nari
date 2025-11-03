@@ -1,0 +1,35 @@
+2025-11-02 22:03:38 [INFO] logging in using static token
+2025-11-02 22:03:39 [INFO] Shard ID 0 has connected to Gateway (Session ID: b48563cf5d814a58a4c1b233d06b9703).
+2025-11-02 22:04:14 [INFO] logging in using static token
+2025-11-02 22:04:15 [INFO] Shard ID 0 has connected to Gateway (Session ID: 838d5fe5c01d554721b3ef3d2a76a732).
+2025-11-02 22:18:42 [ERROR] [SLASH ERROR] CommandInvokeError in /knockout
+Traceback (most recent call last):
+  File "C:\Users\2024b\OneDrive\Desktop\Nari\venv\Lib\site-packages\discord\app_commands\commands.py", line 858, in _do_call
+    return await self._callback(self.binding, interaction, **params)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\2024b\OneDrive\Desktop\Nari\util\command_checks.py", line 102, in wrapper
+    return await func(self, interaction, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\2024b\OneDrive\Desktop\Nari\cogs\knockout.py", line 114, in knockoutcmd
+    await member.timeout(discord.utils.utcnow() + timedelta(seconds=crit_time), reason="Critical hit!")
+  File "C:\Users\2024b\OneDrive\Desktop\Nari\venv\Lib\site-packages\discord\member.py", line 1053, in timeout
+    await self.edit(timed_out_until=timed_out_until, reason=reason)
+  File "C:\Users\2024b\OneDrive\Desktop\Nari\venv\Lib\site-packages\discord\member.py", line 954, in edit
+    data = await http.edit_member(guild_id, self.id, reason=reason, **payload)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\2024b\OneDrive\Desktop\Nari\venv\Lib\site-packages\discord\http.py", line 767, in request
+    raise Forbidden(response, data)
+discord.errors.Forbidden: 403 Forbidden (error code: 50013): Missing Permissions
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\2024b\OneDrive\Desktop\Nari\venv\Lib\site-packages\discord\app_commands\tree.py", line 1297, in _call
+    await command._invoke_with_namespace(interaction, namespace)
+  File "C:\Users\2024b\OneDrive\Desktop\Nari\venv\Lib\site-packages\discord\app_commands\commands.py", line 884, in _invoke_with_namespace
+    return await self._do_call(interaction, transformed_values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\2024b\OneDrive\Desktop\Nari\venv\Lib\site-packages\discord\app_commands\commands.py", line 877, in _do_call
+    raise CommandInvokeError(self, e) from e
+discord.app_commands.errors.CommandInvokeError: Command 'knockout' raised an exception: Forbidden: 403 Forbidden (error code: 50013): Missing Permissions
+

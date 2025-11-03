@@ -1,0 +1,10 @@
+discord
+colorama
+asyncio
+python-dotenv
+pytz
+requests
+aiohttp
+psutil
+openai
+aiofiles
