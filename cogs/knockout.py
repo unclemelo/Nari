@@ -106,25 +106,27 @@ class Royal(commands.Cog):
         outcome = random.choices(["hit", "miss", "crit"], weights=[0.75, 0.15, 0.10])[0]
         embed = discord.Embed(color=discord.Color.magenta(), title=weapon["title"])
         embed.set_image(url=weapon["gif"])
+        try:
+            if outcome == "miss":
+                embed.description = f"😅 {interaction.user.mention} tried to hit {member.mention} with a random weapon but **missed!**"
+            elif outcome == "crit":
+                crit_time = timeout_value * 2
+                await member.timeout(discord.utils.utcnow() + timedelta(seconds=crit_time), reason="Critical hit!")
+                embed.description = f"🔥 **CRITICAL HIT!** {interaction.user.mention} annihilated {member.mention} with a {weapon_key}! They're out cold for **{crit_time}s!**"
+                self.add_kill(interaction.user.id)
+                self.add_death(member.id)
+                self.add_xp(interaction.user.id, random.randint(15, 30))
+            else:
+                await member.timeout(discord.utils.utcnow() + timedelta(seconds=timeout_value), reason="Knocked out!")
+                embed.description = f"{interaction.user.mention} used a **{weapon_key}** on {member.mention}! {random.choice(weapon['lines'])}"
+                self.add_kill(interaction.user.id)
+                self.add_death(member.id)
+                self.add_xp(interaction.user.id, random.randint(10, 25))
 
-        if outcome == "miss":
-            embed.description = f"😅 {interaction.user.mention} tried to hit {member.mention} with a random weapon but **missed!**"
-        elif outcome == "crit":
-            crit_time = timeout_value * 2
-            await member.timeout(discord.utils.utcnow() + timedelta(seconds=crit_time), reason="Critical hit!")
-            embed.description = f"🔥 **CRITICAL HIT!** {interaction.user.mention} annihilated {member.mention} with a {weapon_key}! They're out cold for **{crit_time}s!**"
-            self.add_kill(interaction.user.id)
-            self.add_death(member.id)
-            self.add_xp(interaction.user.id, random.randint(15, 30))
-        else:
-            await member.timeout(discord.utils.utcnow() + timedelta(seconds=timeout_value), reason="Knocked out!")
-            embed.description = f"{interaction.user.mention} used a **{weapon_key}** on {member.mention}! {random.choice(weapon['lines'])}"
-            self.add_kill(interaction.user.id)
-            self.add_death(member.id)
-            self.add_xp(interaction.user.id, random.randint(10, 25))
-
-        embed.set_footer(text="🕐 Cooldown: 10 minutes")
-        await interaction.response.send_message(embed=embed)
+            embed.set_footer(text="🕐 Cooldown: 10 minutes")
+            await interaction.response.send_message(embed=embed)
+        except:
+            await interaction.response.send_message("They are pretected :<\n🕐 Cooldown: 10 minutes")
 
 
 async def setup(bot: commands.Bot):
