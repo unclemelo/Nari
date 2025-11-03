@@ -1,4 +1,4 @@
-# bot.py — Melli v2.0 (Terminal Edition)
+# bot.py — Nari v2.0 (Terminal Edition)
 # ──────────────────────────────────────────────
 # Terminal-only version styled like Watch_Dogs 2
 
@@ -117,7 +117,7 @@ async def main():
         log(f"Critical error loading cogs: {e}", "critical")
 
     try:
-        log("Starting Melli client...", "info")
+        log("Starting Nari client...", "info")
         await client.start(TOKEN)
     except KeyboardInterrupt:
         log("Manual shutdown requested (Ctrl+C)", "warn")

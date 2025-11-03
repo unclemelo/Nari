@@ -9,8 +9,7 @@ class HelpCommand(commands.Cog):
 
     def build_embed(self, category: str) -> discord.Embed:
         embed = discord.Embed(
-            title="📖 • Melli's Commands & Features",
-            description="Use `/add_melli` to see who helped build Melli!\n[🛠 Join the Support Server](https://discord.gg/r2q6gNp9t3)",
+            title="📖 • Nari's Commands & Features",
             color=discord.Color.magenta()
         )
 

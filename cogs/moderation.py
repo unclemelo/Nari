@@ -11,7 +11,7 @@ WARN_FILE = 'data/warns.json'
 
 
 class Moderation(commands.Cog):
-    """🛠️ Melli's Moderation Tools"""
+    """🛠️ Nari's Moderation Tools"""
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.warnings = self.load_warnings_sync()
@@ -41,7 +41,7 @@ class Moderation(commands.Cog):
     def build_embed(self, title: str, description: str = None, color: discord.Color = discord.Color.blurple()):
         """Return a nicely formatted embed."""
         embed = discord.Embed(title=title, description=description, color=color)
-        embed.set_footer(text="Melli Moderation System")
+        embed.set_footer(text="Nari Moderation System")
         return embed
 
     # ───────────────────────────────────────────────
