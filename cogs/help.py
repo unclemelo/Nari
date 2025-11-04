@@ -13,15 +13,6 @@ class HelpCommand(commands.Cog):
             color=discord.Color.magenta()
         )
 
-        if category in ("all", "utility"):
-            embed.add_field(
-                name="💡 Utility Commands",
-                value=(
-                    "• `/profile [user]` — View your profile or another user's profile.\n"
-                ),
-                inline=False
-            )
-
         if category in ("all", "moderation"):
             embed.add_field(
                 name="📌 Moderation Tools",
@@ -57,7 +48,7 @@ class HelpCommand(commands.Cog):
             embed.add_field(
                 name="🔊 VC Tools",
                 value=(
-                    "• `/bump <user> <target_vc>` — Move a user to another voice channel.\n"
+                    "• `/move <user> <target_vc>` — Move a user to another voice channel.\n"
                     "• `/vc_mute <user>` — Server mute a user in voice chat.\n"
                     "• `/vc_unmute <user>` — Unmute a user in voice chat.\n"
                     "• `/deafen <user>` — Server deafen a user in voice chat.\n"
@@ -87,7 +78,6 @@ class HelpCommand(commands.Cog):
     @app_commands.choices(category=[
         app_commands.Choice(name="All", value="all"),
         app_commands.Choice(name="Moderation", value="moderation"),
-        app_commands.Choice(name="Utility", value="utility"),
         app_commands.Choice(name="AutoMod", value="automod"),
         app_commands.Choice(name="VC Tools", value="vc"),
         app_commands.Choice(name="Fun", value="fun"),
@@ -97,7 +87,7 @@ class HelpCommand(commands.Cog):
         selected_category = category.value if category else "all"
         embed = self.build_embed(selected_category)
         view = HelpView(self)
-        await interaction.response.send_message("This Command is temp disabled", ephemeral=False)
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
 
 
 class HelpView(discord.ui.View):
