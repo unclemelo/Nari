@@ -82,7 +82,7 @@ class MISC(commands.Cog):
             prank_nick = f"{member.name} 🤡"
             try:
                 await member.edit(nick=prank_nick)
-                await interaction.followup.send(f"`{member.mention}` is now known as `{prank_nick}`. Let the giggles begin!")
+                await interaction.followup.send(f"{member.mention} is now known as `{prank_nick}`. Let the giggles begin! X3")
             except discord.Forbidden:
                 await interaction.followup.send("I can't prank them. They're protected by Discord gods. 🙄", ephemeral=True)
             except Exception as e:
@@ -95,7 +95,7 @@ class MISC(commands.Cog):
                 await interaction.followup.send(f"`{member.mention}` is now known as `{prank_nick}`. Let the giggles begin!")
                 await asyncio.sleep(60)
                 await member.edit(nick=None)
-                await interaction.followup.send("Prank over. Nickname restored!")
+                await interaction.followup.send("Melo said I had to restore the nickname after 1 min.\n=_= Fineeeee here your nickname is restored. The fun is over.")
             except discord.Forbidden:
                 await interaction.followup.send("I can't prank them. They're protected by Discord gods. 🙄", ephemeral=True)
             except Exception as e:
