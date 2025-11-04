@@ -5,7 +5,7 @@ from datetime import timedelta
 from util.command_checks import command_enabled
 from util.booster_cooldown import BoosterCooldownManager
 
-cooldown_manager_user = BoosterCooldownManager(rate=1, per=600, bucket_type="user")
+cooldown_manager_user = BoosterCooldownManager(rate=1, per=1800, bucket_type="user")
 
 STATS_FILE = "data/royal_stats.json"
 WEAPON_FILE = "data/weapons.json"
@@ -123,10 +123,10 @@ class Royal(commands.Cog):
                 self.add_death(member.id)
                 self.add_xp(interaction.user.id, random.randint(10, 25))
 
-            embed.set_footer(text="🕐 Cooldown: 10 minutes")
+            embed.set_footer(text="🕐 Cooldown: 30 minutes")
             await interaction.response.send_message(embed=embed)
         except:
-            await interaction.response.send_message("They are pretected :<\n🕐 Cooldown: 10 minutes")
+            await interaction.response.send_message("They are pretected :<\n🕐 Cooldown: 30 minutes")
 
 
 async def setup(bot: commands.Bot):

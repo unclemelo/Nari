@@ -9,7 +9,7 @@ from discord import app_commands
 from discord.ext import commands
 
 GITHUB_REPO = "https://github.com/unclemelo/Nari"
-DEV_ROLE_ID = 1434074860681822259
+DEV_ROLE_ID = 1435135698146426890
 
 class Updater(commands.Cog):
     def __init__(self, bot):
