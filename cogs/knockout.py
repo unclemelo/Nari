@@ -10,6 +10,9 @@ cooldown_manager_user = BoosterCooldownManager(rate=1, per=1800, bucket_type="us
 STATS_FILE = "data/royal_stats.json"
 WEAPON_FILE = "data/weapons.json"
 
+#   | Latest Update:
+#   | Added why a user is protected
+#   | Coded by: Melo
 
 class Royal(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -126,7 +129,12 @@ class Royal(commands.Cog):
             embed.set_footer(text="🕐 Cooldown: 30 minutes")
             await interaction.response.send_message(embed=embed)
         except:
-            await interaction.response.send_message("They are pretected :<\n🕐 Cooldown: 30 minutes")
+            embed = discord.Embed(color=discord.Color.magenta(), title="Nah uh, they are staff!! X3")
+            embed.description = f"{member.mention} is pretected :<.\nThis is because they are higher than me in the role list."
+            embed.set_image(url="https://media.discordapp.net/attachments/1308048258337345609/1435509129136439428/nope-anime.gif?ex=690c398e&is=690ae80e&hm=b3844ee875fa1ffb84b1396010e8578e73944ef04c45433f1273748e54b9af44&=&width=548&height=548")
+            embed.set_footer(text="🕐 Cooldown: 30 minutes")
+            await interaction.response.send_message(embed=embed)
+            
 
 
 async def setup(bot: commands.Bot):

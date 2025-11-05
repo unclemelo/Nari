@@ -64,8 +64,6 @@ class HelpCommand(commands.Cog):
                 value=(
                     "• `/knockout <user>` — Timeout a user dramatically!\n"
                     "• `/revive <user>` — Bring back a timed-out user.\n"
-                    "• `/prank <user>` — Harmlessly prank a user.\n"
-                    "• `/chaos` — Temporarily unleash chaotic actions."
                 ),
                 inline=False
             )

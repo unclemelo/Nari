@@ -97,4 +97,4 @@ class ERROR(commands.Cog):
         logging.critical(f"Uncaught Exception:\n{trace}")
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(ERROR(bot, error_channel_id=1308048388637462558))
+    await bot.add_cog(ERROR(bot, error_channel_id=1431065718920839170))
