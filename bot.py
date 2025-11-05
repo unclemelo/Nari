@@ -21,7 +21,7 @@ TOKEN = os.getenv("TOKEN")
 # Bot setup
 intents = discord.Intents.all()
 intents.members = True
-client = commands.AutoShardedBot(command_prefix="!", shard_count=1, intents=intents)
+client = commands.AutoShardedBot(command_prefix="n!", shard_count=1, intents=intents)
 client.remove_command("help")
 
 # ──────────────────────────────────────────────

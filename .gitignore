@@ -8,3 +8,4 @@ data/warns.json
 data/applied_presets.json
 venv/
 bot_errors.log
+data/modlogs.json
