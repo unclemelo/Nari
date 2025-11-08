@@ -2,61 +2,153 @@
   "sniper": {
     "title": "🎯 Sniper Shot!",
     "timeout": 30,
+    "xp_multiplier": 1.3,
     "gif": "https://cdn.discordapp.com/attachments/1183985896039661658/1308790458889146398/sinon-sao.gif",
     "lines": [
       "Headshot confirmed!",
       "One shot, one nap.",
       "They never saw it coming..."
+    ],
+    "crit_lines": [
+      "💥 Double kill! That bullet went *through time itself!*",
+      "Perfect precision — you're a legend."
+    ],
+    "miss_lines": [
+      "Missed! Maybe clean your scope next time?",
+      "Bullet went *somewhere*, not sure where though..."
     ]
   },
   "shotie": {
     "title": "💥 Shotgun Blast!",
     "timeout": [30, 60],
+    "xp_multiplier": 1.1,
     "gif": "https://cdn.discordapp.com/attachments/1183985896039661658/1308790449795895347/shotgun-bread-boys.gif",
     "lines": [
       "Boom! That's gotta hurt!",
       "Close-range carnage!",
       "You turned them into digital dust!"
+    ],
+    "crit_lines": [
+      "They flew across the map! 💨",
+      "Collateral damage incoming!"
+    ],
+    "miss_lines": [
+      "You hit the floorboards. Impressive aim!",
+      "They ducked at the last second — skill issue?"
     ]
   },
   "pistol": {
     "title": "🔫 Pistol Shot!",
     "timeout": 20,
+    "xp_multiplier": 1.0,
     "gif": "https://cdn.discordapp.com/attachments/1183985896039661658/1308790414626656256/gun-fire.gif",
     "lines": [
       "Pew pew! Straight to the ego!",
       "They flinched just in time — almost.",
       "Quick draw wins again."
+    ],
+    "crit_lines": [
+      "Bang! That was cinematic.",
+      "No reload needed — pure finesse."
+    ],
+    "miss_lines": [
+      "You missed the broad side of a barn!",
+      "Maybe next time, cowboy."
     ]
   },
   "grenade": {
     "title": "💣 Grenade Explosion!",
     "timeout": 90,
+    "xp_multiplier": 1.5,
     "gif": "https://cdn.discordapp.com/attachments/1183985896039661658/1308790148493873162/boom.gif",
     "lines": [
       "BOOM! That's what I call a statement.",
       "You threw that like a champ!",
       "Nothing but chaos remains..."
+    ],
+    "crit_lines": [
+      "🔥 MULTI-KILL! The explosion echoed across the server!",
+      "Everything within 10ft disintegrated!"
+    ],
+    "miss_lines": [
+      "You forgot to pull the pin... oops.",
+      "It bounced back — RUN!"
     ]
   },
   "rocket": {
     "title": "🚀 Rocket Launcher!",
     "timeout": 120,
+    "xp_multiplier": 1.7,
     "gif": "https://cdn.discordapp.com/attachments/1183985896039661658/1308789861880299583/laser-eye.gif",
     "lines": [
       "Direct hit! 💀",
       "They got vaporized instantly!",
       "You really went *overkill* this time..."
+    ],
+    "crit_lines": [
+      "✨ Target deleted from existence.",
+      "Nothing left but the crater."
+    ],
+    "miss_lines": [
+      "Rocket spiraled into orbit.",
+      "NASA just called, they want their satellite back."
     ]
   },
   "club": {
     "title": "🔨 Bonk Attack!",
     "timeout": 15,
+    "xp_multiplier": 0.8,
     "gif": "https://cdn.discordapp.com/attachments/1290652330127003679/1326216909854736515/bonk-anime.gif",
     "lines": [
       "💥 BONK! Go to horny jail.",
       "Classic melee dominance.",
       "That swing had sound effects IRL."
+    ],
+    "crit_lines": [
+      "Critical BONK! Double horny jail sentence.",
+      "That one echoed in another dimension."
+    ],
+    "miss_lines": [
+      "You tripped mid-swing... stylish.",
+      "They dodged your bonk with anime reflexes."
+    ]
+  },
+  "nuke": {
+    "title": "☢️ NUCLEAR STRIKE!",
+    "timeout": "all_members",
+    "xp_multiplier": 5.0,
+    "gif": "https://cdn.discordapp.com/attachments/1422776966582374400/1435821022673895496/kaboom.gif?ex=690d5c08&is=690c0a88&hm=ee3330fb4eaaf428722ce15a4ea01fb1d6a0199e1b944512d03d7bf460d7b8e2&",
+    "lines": [
+      "💥 Server annihilated!",
+      "Everyone got obliterated!",
+      "The apocalypse is now digital!"
+    ],
+    "crit_lines": [
+      "💣 Absolute devastation! No one survives!",
+      "Time itself shook from that strike!"
+    ],
+    "miss_lines": [
+      "You launched it backwards... lucky escape?",
+      "The nuke fizzled. Someone call maintenance!"
+    ]
+  },
+  "garande_hug": {
+    "title": "🤗 Garande Hug!",
+    "timeout": "last_5_chatters",
+    "xp_multiplier": 3.0,
+    "gif": "https://cdn.discordapp.com/attachments/1431064762640498882/1435821525906227322/syno-i-love-you-syno.gif?ex=690d5c80&is=690c0b00&hm=427f86a7c13f63581d7ac83d878025a89ba000b9ffd1cb365b8fc31016568cec&",
+    "lines": [
+      "Everyone gets a giant hug! 💖",
+      "The last 5 chatters feel loved!",
+      "Intense affection incoming!"
+    ],
+    "crit_lines": [
+      "💞 Hug combo! Extra timeout of love!",
+      "The affection overwhelmed reality!"
+    ],
+    "miss_lines": [
+      "You missed a hug? Awkward...",
+      "Somehow, the hug bounced off reality."
     ]
   }
 }
