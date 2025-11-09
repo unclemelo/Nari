@@ -65,7 +65,7 @@ class RoyalStats(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.data = load_data()
-        self.max_level = 50
+        self.max_level = 15
         self.global_xp_multiplier = 1.5  # make leveling easier
 
     # --- Helpers ---

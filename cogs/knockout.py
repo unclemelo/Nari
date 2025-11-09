@@ -89,8 +89,8 @@ class Royale(commands.Cog):
         while user["xp"] >= self.xp_needed(user["level"]):
             user["xp"] -= self.xp_needed(user["level"])
             user["level"] += 1
-            if user["level"] > 50:
-                user["level"] = 50
+            if user["level"] > 15:
+                user["level"] = 15
             leveled_up = True
         self.save_stats()
         return leveled_up
