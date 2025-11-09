@@ -160,15 +160,15 @@ class Royale(commands.Cog):
     async def before_cleanup(self):
         await self.bot.wait_until_ready()
 
-    # === Knockout Command ===
-    # === Knockout Command ===
-        # === Knockout Command (Rate-limit Safe) ===
     @app_commands.command(name="knockout", description="Knock someone out with a random weapon!")
     @command_enabled()
     async def knockoutcmd(self, interaction: discord.Interaction, member: discord.Member = None):
+        # Defer immediately to avoid interaction timeout (prevents 404)
+        await interaction.response.defer(thinking=True, ephemeral=False)
+
         remaining = await cooldown_knockout.get_remaining(interaction)
         if remaining > 0:
-            return await interaction.response.send_message(
+            return await interaction.followup.send(
                 f"⏳ Slow down! Try again in **{round(remaining, 1)}s**.",
                 ephemeral=True
             )
@@ -178,7 +178,7 @@ class Royale(commands.Cog):
         if member is None:
             candidates = [m for m in interaction.guild.members if not m.bot and m != interaction.user]
             if not candidates:
-                return await interaction.response.send_message("No valid targets found.", ephemeral=True)
+                return await interaction.followup.send("No valid targets found.", ephemeral=True)
             member = random.choice(candidates)
 
         # Prevent self or bot targeting
@@ -188,9 +188,10 @@ class Royale(commands.Cog):
                 description="It's okay to reach out — you matter ❤️\n`988` Suicide and Crisis Lifeline",
                 color=discord.Color.red()
             ).set_footer(text="Available 24/7 — English & Spanish")
-            return await interaction.response.send_message(embed=embed, ephemeral=True)
+            return await interaction.followup.send(embed=embed, ephemeral=True)
+
         if member == interaction.guild.me:
-            return await interaction.response.send_message("❌ I'm not going down that easily!", ephemeral=True)
+            return await interaction.followup.send("❌ I'm not going down that easily!", ephemeral=True)
 
         # === Weapon Selection ===
         weapon_keys = list(self.weapons.keys())
@@ -202,6 +203,7 @@ class Royale(commands.Cog):
                 weights.append(50)    # uncommon
             else:
                 weights.append(100)     # normal
+
         weapon_key = random.choices(weapon_keys, weights=weights, k=1)[0]
         weapon = self.weapons[weapon_key]
 
@@ -218,24 +220,22 @@ class Royale(commands.Cog):
         if outcome == "miss":
             embed.description = f"😅 {interaction.user.mention} missed {member.mention}!\n> {random.choice(weapon.get('miss_lines', ['They missed!']))}"
             embed.set_footer(text=f"🕐 Cooldown: {config.get('knockout_cooldown', 1800)//60} min")
-            return await interaction.response.send_message(embed=embed)
+            return await interaction.followup.send(embed=embed)
 
         crit = (outcome == "crit")
         base_duration = timeout_value
         duration = base_duration * (2 if crit else 1)
         now = discord.utils.utcnow()
 
-        # === Helper: Safe timeout wrapper ===
         async def try_timeout(target: discord.Member, seconds: int, reason: str):
-            """Safely timeout a user with retry logic."""
             for attempt in range(3):
                 try:
                     await target.timeout(now + timedelta(seconds=seconds), reason=reason)
                     await asyncio.sleep(1.15)
                     return True
                 except discord.HTTPException as e:
-                    if e.status == 429:  # rate limited
-                        retry_after = float(e.response.headers.get("Retry-After", 1.30))
+                    if e.status == 429:
+                        retry_after = float(e.response.headers.get("Retry-After", 1.3))
                         await asyncio.sleep(retry_after + 0.25)
                     else:
                         return False
@@ -246,107 +246,47 @@ class Royale(commands.Cog):
             return False
 
         try:
-            # === NUKE ===
-            if weapon_key == "nuke":
-                """me = interaction.guild.me
-                if not me.guild_permissions.moderate_members:
-                    return await interaction.response.send_message("🚫 Missing timeout permission.", ephemeral=True)
+            # Normal single target
+            ok = await try_timeout(member, duration, "Knockout!")
+            if not ok:
+                embed.title = "🚫 Target Protected!"
+                embed.description = f"{member.mention} resisted the attack!"
+                embed.set_image(url="https://media.discordapp.net/attachments/1308048258337345609/1435509129136439428/nope-anime.gif")
+                return await interaction.followup.send(embed=embed)
 
-                affected, skipped = [], []
-                for m in interaction.guild.members:
-                    if m.bot or m == interaction.guild.owner or m.guild_permissions.administrator or me.top_role <= m.top_role:
-                        skipped.append((m, "immune"))
-                        continue
-                    ok = await try_timeout(m, duration, "NUKE!")
-                    if ok:
-                        affected.append(m)
-                        self.deathlog[str(m.id)] = {
-                            "by": interaction.user.id,
-                            "weapon": weapon_key,
-                            "timeout_end": (now + timedelta(seconds=duration)).isoformat(),
-                            "crit": crit
-                        }
-                self.save_deathlog()"""
-                embed.description = f"💥 **NUCLEAR STRIKE!** {interaction.user.mention} launched a nuke!"
-                embed.add_field(name="Affected", value=f"{len(affected)} users", inline=True)
-                embed.add_field(name="Skipped", value=f"{len(skipped)} users", inline=True)
-                embed.add_field(name="**OUT OF ORDER**", value=f"The nuke is out of order but you will still get XP for getting it.", inline=True)
+            # record stats
+            xp_gain = int(random.randint(20 if crit else 10, 35 if crit else 25) * xp_multi)
+            leveled = self.add_xp(interaction.user.id, xp_gain)
+            self.add_kill(interaction.user.id)
+            self.add_death(member.id)
+            self.deathlog[str(member.id)] = {
+                "by": interaction.user.id,
+                "weapon": weapon_key,
+                "timeout_end": (now + timedelta(seconds=duration)).isoformat(),
+                "crit": crit
+            }
+            self.save_deathlog()
 
-            # === Garande Hug ===
-            elif weapon_key == "garande_hug":
-                me = interaction.guild.me
-                if not me.guild_permissions.moderate_members:
-                    return await interaction.response.send_message("🚫 Missing timeout permission.", ephemeral=True)
-
-                recent_authors = []
-                async for msg in interaction.channel.history(limit=200):
-                    if msg.author.bot or msg.author == interaction.user:
-                        continue
-                    if msg.author not in recent_authors:
-                        recent_authors.append(msg.author)
-                    if len(recent_authors) >= 5:
-                        break
-
-                affected, skipped = [], []
-                for target in recent_authors:
-                    if target == interaction.guild.owner or me.top_role <= target.top_role:
-                        skipped.append((target, "immune"))
-                        continue
-                    ok = await try_timeout(target, duration, "Garande Hug!")
-                    if ok:
-                        affected.append(target)
-                        self.deathlog[str(target.id)] = {
-                            "by": interaction.user.id,
-                            "weapon": weapon_key,
-                            "timeout_end": (now + timedelta(seconds=duration)).isoformat(),
-                            "crit": crit
-                        }
-                self.save_deathlog()
-                embed.description = f"🤗 **Garande Hug!** {interaction.user.mention} hugged recent chatters."
-                embed.add_field(name="Affected", value=f"{len(affected)} users", inline=True)
-                embed.add_field(name="Skipped", value=f"{len(skipped)} users", inline=True)
-
-            # === Normal Single Target ===
-            else:
-                ok = await try_timeout(member, duration, "Knockout!")
-                if not ok:
-                    embed.title = "🚫 Target Protected!"
-                    embed.description = f"{member.mention} resisted the attack!"
-                    embed.set_image(url="https://media.discordapp.net/attachments/1308048258337345609/1435509129136439428/nope-anime.gif")
-                    return await interaction.response.send_message(embed=embed)
-
-                # record stats
-                xp_gain = int(random.randint(20 if crit else 10, 35 if crit else 25) * xp_multi)
-                leveled = self.add_xp(interaction.user.id, xp_gain)
-                self.add_kill(interaction.user.id)
-                self.add_death(member.id)
-                self.deathlog[str(member.id)] = {
-                    "by": interaction.user.id,
-                    "weapon": weapon_key,
-                    "timeout_end": (now + timedelta(seconds=duration)).isoformat(),
-                    "crit": crit
-                }
-                self.save_deathlog()
-
-                # embed
-                embed.description = (
-                    f"🔥 **CRITICAL HIT!** {interaction.user.mention} obliterated {member.mention} with **{weapon_key}!**\n> {random.choice(weapon.get('crit_lines', ['Critical hit!']))}"
-                    if crit
-                    else f"{interaction.user.mention} hit {member.mention} with **{weapon_key}**!\n> {random.choice(weapon.get('lines', ['Hit!']))}"
-                )
-                embed.add_field(name="🏅 XP Gained", value=f"**+{xp_gain} XP**", inline=False)
-                if leveled:
-                    embed.add_field(name="🆙 Level Up!", value=f"{interaction.user.mention} reached **Level {self.get_user(interaction.user.id)['level']}!**", inline=False)
+            # embed
+            embed.description = (
+                f"🔥 **CRITICAL HIT!** {interaction.user.mention} obliterated {member.mention} with **{weapon_key}!**\n> {random.choice(weapon.get('crit_lines', ['Critical hit!']))}"
+                if crit
+                else f"{interaction.user.mention} hit {member.mention} with **{weapon_key}**!\n> {random.choice(weapon.get('lines', ['Hit!']))}"
+            )
+            embed.add_field(name="🏅 XP Gained", value=f"**+{xp_gain} XP**", inline=False)
+            if leveled:
+                embed.add_field(name="🆙 Level Up!", value=f"{interaction.user.mention} reached **Level {self.get_user(interaction.user.id)['level']}!**", inline=False)
 
             embed.set_footer(text=f"🕐 Cooldown: {config.get('knockout_cooldown', 900)//60} min")
-            await interaction.response.send_message(embed=embed)
+            await interaction.followup.send(embed=embed)
 
         except Exception as e:
             print(f"[Royale] knockout error: {e}")
             try:
-                await interaction.response.send_message("⚠️ Something went wrong while performing the knockout.", ephemeral=True)
+                await interaction.followup.send("⚠️ Something went wrong while performing the knockout.", ephemeral=True)
             except Exception:
                 pass
+
 
 
 
