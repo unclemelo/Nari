@@ -251,7 +251,10 @@ class Royale(commands.Cog):
             if not ok:
                 embed.title = "🚫 Target Protected!"
                 embed.description = f"{member.mention} resisted the attack!"
+                self.add_kill(interaction.user.id)
+                self.add_death(member.id)
                 embed.set_image(url="https://media.discordapp.net/attachments/1308048258337345609/1435509129136439428/nope-anime.gif")
+                embed.set_footer(text=f"🕐 Cooldown: {config.get('knockout_cooldown', 900)//60} min")
                 return await interaction.followup.send(embed=embed)
 
             # record stats
