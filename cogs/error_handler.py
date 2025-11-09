@@ -9,8 +9,8 @@ from discord.ext import commands
 from colorama import Fore, Style, init
 from dotenv import load_dotenv
 
-load_dotenv()
-WEBHOOK_URL = os.getenv('WEBHOOK')
+#load_dotenv()
+#WEBHOOK_URL = os.getenv('WEBHOOK')
 # Initialize colorama for colored terminal output
 init(autoreset=True)
 
