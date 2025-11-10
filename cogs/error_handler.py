@@ -101,19 +101,19 @@ class ERROR(commands.Cog):
         print(formatted_trace)
         logging.critical(f"Uncaught Exception:\n{trace}")
         self.send_to_webhook(f"**[CRITICAL ERROR]** `{exctype.__name__}`\n```py\n{trace[:1900]}\n```")
-
-def send_to_webhook(self, message: str):
-    #Sends formatted message to Discord webhook.
-    payload = {
-        "content": message,
-        "username": "Melli Console",
-        "avatar_url": "https://www.setra.com/hubfs/Sajni/crc_error.jpg"
-    }
-    try:
-        response = requests.post(WEBHOOK_URL, json=payload)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Failed to send log to webhook: {e}")
+        
+    def send_to_webhook(self, message: str):
+        #Sends formatted message to Discord webhook.
+        payload = {
+            "content": message,
+            "username": "Melli Console",
+            "avatar_url": "https://www.setra.com/hubfs/Sajni/crc_error.jpg"
+        }
+        try:
+            response = requests.post(WEBHOOK_URL, json=payload)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Failed to send log to webhook: {e}")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ERROR(bot, error_channel_id=1431065718920839170))
