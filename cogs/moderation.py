@@ -104,7 +104,7 @@ class Moderation(commands.Cog):
     # Moderation Commands
     # ───────────────────────────────────────────────
     @app_commands.command(name="warnings", description="Check all warnings for a user.")
-    @app_commands.checks.has_permissions(manage_messages=True or user_id=667032667732312115) #Exception for Pitr
+    @app_commands.checks.has_permissions(manage_messages=True)
     async def warnings_cmd(self, interaction: discord.Interaction, member: discord.Member):
         guild_id, user_id = str(interaction.guild.id), str(member.id)
         self.ensure_guild_user(guild_id, user_id)
