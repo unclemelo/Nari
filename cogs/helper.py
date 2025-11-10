@@ -9,7 +9,7 @@ import asyncio
 
 WARN_FILE = 'data/warns.json'
 
-class Autodel_warns(commands.Cog):
+class helpers(commands.Cog):
     """On interaction check and delete warns over a month old"""
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -28,4 +28,4 @@ class Autodel_warns(commands.Cog):
             await file.write(json.dumps(data, indent=4))
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(Autodel_warns(bot))
+    await bot.add_cog(helpers(bot))
