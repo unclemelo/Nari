@@ -26,3 +26,6 @@ class Autodel_warns(commands.Cog):
     async def save_json(self, path: str, data: dict):
         async with aiofiles.open(path, 'w', encoding='utf-8') as file:
             await file.write(json.dumps(data, indent=4))
+
+async def setup(bot: commands.Bot):
+    await bot.add_cog(Autodel_warns(bot))
