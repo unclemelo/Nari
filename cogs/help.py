@@ -27,7 +27,7 @@ class HelpCommand(commands.Cog):
                     "• `/kick <user> [reason]` — Kick a member.\n"
                     "• `/ban <user> [reason]` — Ban a member.\n"
                     "• `/unban <user>` — Unban a previously banned user.\n"
-                    "• `/setlogs <channel_id>` — Nari moderation logs.\n"
+                    "• `/setlogs <channel_id>` — Set Nari’s moderation logs channel."
                 ),
                 inline=False
             )
@@ -38,9 +38,9 @@ class HelpCommand(commands.Cog):
                 value=(
                     "• `/setup` — Interactive AutoMod setup wizard.\n"
                     "• `/forceupdate` — Refresh AutoMod rules immediately.\n"
-                    "• `/show_config` — Lets you see the current AutoMod settings in a neat embed.\n"
-                    "• `/clear_config` — Wipes your AutoMod settings for the guild.\n"
-                    "• `/set_log_channel` — Lets you pick the log channel explicitly, stored in temp data for now."
+                    "• `/show_config` — View your AutoMod settings in an embed.\n"
+                    "• `/clear_config` — Wipe AutoMod settings for the guild.\n"
+                    "• `/set_log_channel` — Set the AutoMod log channel."
                 ),
                 inline=False
             )
@@ -50,22 +50,58 @@ class HelpCommand(commands.Cog):
                 name="🔊 VC Tools",
                 value=(
                     "• `/move <user> <target_vc>` — Move a user to another voice channel.\n"
-                    "• `/vc_mute <user>` — Server mute a user in voice chat.\n"
-                    "• `/vc_unmute <user>` — Unmute a user in voice chat.\n"
-                    "• `/deafen <user>` — Server deafen a user in voice chat.\n"
-                    "• `/undeafen <user>` — Remove deafening from a user.\n"
+                    "• `/vc_mute <user>` — Server mute a user in VC.\n"
+                    "• `/vc_unmute <user>` — Unmute a user in VC.\n"
+                    "• `/deafen <user>` — Server deafen a user.\n"
+                    "• `/undeafen <user>` — Undeafen a user.\n"
                     "• `/kickvc <user>` — Disconnect a user from voice chat."
                 ),
                 inline=False
             )
 
-        if category in ("all", "fun"):
+        if category in ("all", "utility"):
             embed.add_field(
-                name="🎉 Fun & Extras",
+                name="💡 Utility Commands",
                 value=(
-                    "• `/knockout` — Timeout a user dramatically!\n"
-                    "• `/revive <user>` — Bring back a timed-out user.\n"
-                    "• `/hug <user>` — Hug someone.\n"
+                    "• `/whois <user>` — View detailed info about a member.\n"
+                    "• `/serverinfo` — Show info about the current server.\n"
+                    "• `/userinfo <user>` — Display account details.\n"
+                    "• `/avatar <user>` — View a user’s avatar or banner.\n"
+                    "• `/ping` — Check bot latency.\n"
+                    "• `/uptime` — Show how long Nari’s been online.\n"
+                    "• `/botinfo` — Display system stats and command info."
+                ),
+                inline=False
+            )
+
+        if category in ("all", "fun", "minigames"):
+            embed.add_field(
+                name="🎮 Mini-Games & Fun",
+                value=(
+                    "• `/coinflip` — Flip a coin.\n"
+                    "• `/dice [sides]` — Roll a dice (default 6 sides).\n"
+                    "• `/8ball <question>` — Ask the magic 8-ball.\n"
+                    "• `/rps <choice>` — Play Rock, Paper, Scissors.\n"
+                    "• `/trivia` — Answer a random trivia question.\n"
+                    "• `/guessnumber` — Guess a number between 1–100."
+                ),
+                inline=False
+            )
+
+        if category in ("all", "social"):
+            embed.add_field(
+                name="💞 Social & Interactions",
+                value=(
+                    "• `/hug <user>` — Hug someone warmly.\n"
+                    "• `/kiss <user>` — Kiss someone affectionately.\n"
+                    "• `/pat <user>` — Pat someone gently.\n"
+                    "• `/snuggle <user>` — Cuddle with someone.\n"
+                    "• `/poke <user>` — Poke another user playfully.\n"
+                    "• `/blush` — Show embarrassment.\n"
+                    "• `/highfive <user>` — High-five a friend.\n"
+                    "• `/bonk <user>` — Bonk someone being silly.\n"
+                    "• `/slap <user>` — Slap someone playfully.\n"
+                    "• `/interactlist` — Show all social commands."
                 ),
                 inline=False
             )
@@ -73,13 +109,16 @@ class HelpCommand(commands.Cog):
         embed.set_footer(text="Need more help? Join the support server or ping a mod!")
         return embed
 
-    @app_commands.command(name="help", description="Get a list of available commands")
-    @app_commands.describe(category="Pick a category to see commands from")
+    @app_commands.command(name="help", description="Get a list of Nari's available commands")
+    @app_commands.describe(category="Pick a category to view its commands")
     @app_commands.choices(category=[
         app_commands.Choice(name="All", value="all"),
         app_commands.Choice(name="Moderation", value="moderation"),
         app_commands.Choice(name="AutoMod", value="automod"),
         app_commands.Choice(name="VC Tools", value="vc"),
+        app_commands.Choice(name="Utility", value="utility"),
+        app_commands.Choice(name="Mini-Games", value="minigames"),
+        app_commands.Choice(name="Social", value="social"),
         app_commands.Choice(name="Fun", value="fun"),
     ])
     @command_enabled()
@@ -92,7 +131,7 @@ class HelpCommand(commands.Cog):
 
 class HelpView(discord.ui.View):
     def __init__(self, cog: HelpCommand):
-        super().__init__(timeout=60)
+        super().__init__(timeout=120)
         self.cog = cog
 
     @discord.ui.select(
@@ -102,10 +141,11 @@ class HelpView(discord.ui.View):
         options=[
             discord.SelectOption(label="All", value="all", emoji="📖"),
             discord.SelectOption(label="Moderation", value="moderation", emoji="📌"),
-            discord.SelectOption(label="Utility", value="utility", emoji="💡"),
             discord.SelectOption(label="AutoMod", value="automod", emoji="🛡️"),
             discord.SelectOption(label="VC Tools", value="vc", emoji="🔊"),
-            discord.SelectOption(label="Fun", value="fun", emoji="🎉"),
+            discord.SelectOption(label="Utility", value="utility", emoji="💡"),
+            discord.SelectOption(label="Mini-Games", value="minigames", emoji="🎮"),
+            discord.SelectOption(label="Social", value="social", emoji="💞"),
         ]
     )
     async def select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
@@ -113,8 +153,7 @@ class HelpView(discord.ui.View):
         embed = self.cog.build_embed(value)
         await interaction.response.edit_message(embed=embed, view=self)
 
-    async def on_timeout(self) -> None:
-        # Disable the select when view times out
+    async def on_timeout(self):
         for child in self.children:
             child.disabled = True
         try:
