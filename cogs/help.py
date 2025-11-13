@@ -27,6 +27,7 @@ class HelpCommand(commands.Cog):
                     "• `/kick <user> [reason]` — Kick a member.\n"
                     "• `/ban <user> [reason]` — Ban a member.\n"
                     "• `/unban <user>` — Unban a previously banned user.\n"
+                    "• `/setlogs <channel_id>` — Nari moderation logs.\n"
                 ),
                 inline=False
             )
@@ -62,8 +63,9 @@ class HelpCommand(commands.Cog):
             embed.add_field(
                 name="🎉 Fun & Extras",
                 value=(
-                    "• `/knockout <user>` — Timeout a user dramatically!\n"
+                    "• `/knockout` — Timeout a user dramatically!\n"
                     "• `/revive <user>` — Bring back a timed-out user.\n"
+                    "• `/hug <user>` — Hug someone.\n"
                 ),
                 inline=False
             )
