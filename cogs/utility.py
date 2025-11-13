@@ -48,7 +48,7 @@ class Utility(commands.Cog):
             title="🤖 Nari Bot Info",
             color=discord.Color.magenta()
         )
-        embed.add_field(name="Developer", value="**Melo & Kiwi**", inline=True)
+        embed.add_field(name="Developer", value="**Melo & Pitr**", inline=True)
         embed.add_field(name="Library", value=f"discord.py `{discord.__version__}`", inline=True)
         embed.add_field(name="Python", value=f"`{platform.python_version()}`", inline=True)
         embed.add_field(name="CPU Usage", value=f"`{cpu}%`", inline=True)
