@@ -125,12 +125,12 @@ class Social(commands.Cog):
         await self.send_interaction(interaction, user, "highfive", "highfive",
             f"✋ {interaction.user.mention} high-fives {user.mention}!")
 
-    @app_commands.command(name="bonk", description="Bonk someone who’s being silly.")
+    """@app_commands.command(name="bonk", description="Bonk someone who’s being silly.")
     @app_commands.describe(user="The user you want to bonk")
     @app_commands.checks.cooldown(1, 300, key=lambda i: i.user.id)
     async def bonk(self, interaction: discord.Interaction, user: discord.User):
         await self.send_interaction(interaction, user, "bonk", "bonk",
-            f"🔨 {interaction.user.mention} bonks {user.mention} for being silly!")
+            f"🔨 {interaction.user.mention} bonks {user.mention} for being silly!")"""
 
     @app_commands.command(name="slap", description="Slap someone (playfully or dramatically).")
     @app_commands.describe(user="The user you want to slap")
@@ -149,7 +149,6 @@ class Social(commands.Cog):
             "`/poke <user>` — Playfully poke another user.",
             "`/blush` — React with embarrassment or shyness.",
             "`/highfive <user>` — High-five a friend.",
-            "`/bonk <user>` — Bonk someone who’s being silly.",
             "`/slap <user>` — Slap someone playfully or dramatically.",
         ]
 
