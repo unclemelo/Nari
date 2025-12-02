@@ -55,6 +55,35 @@ class Social(commands.Cog):
                 return None
 
     async def send_interaction(self, interaction, target, action, endpoint, description):
+        # Detect self-target
+        if target == interaction.user:
+            # Fetch gif normally
+            gif = await self.fetch_gif(endpoint)
+            if not gif:
+                return await interaction.response.send_message("⚠️ Couldn't fetch a GIF right now.", ephemeral=True)
+
+            # Custom cute message for self-hug/pat/etc.
+            self_messages = {
+                "hug": "🫂 Sometimes we all need a hug... even from ourselves.",
+                "kiss": "💋 Self-love is important! Treat yourself kindly.",
+                "pat": "🤗 It's okay to give yourself some encouragement.",
+                "snuggle": "🫶 Cozying up with yourself counts too!",
+                "poke": "👉 You poked yourself... why tho?",
+                "highfive": "✋ High-fiving yourself? Ambitious!",
+                "slap": "👋 ...why did you slap yourself?",
+            }
+
+            embed = discord.Embed(
+                description=f"{interaction.user.mention} {action}s themselves!\n\n{self_messages.get(action, '')}",
+                color=discord.Color.pink()
+            )
+            embed.set_image(url=gif)
+            embed.set_footer(text=f"Requested by {interaction.user}", icon_url=interaction.user.display_avatar.url)
+
+            # No reply button for self-actions
+            return await interaction.response.send_message(embed=embed)
+
+        # ————— Normal interaction for two users ————— #
         gif = await self.fetch_gif(endpoint)
         if not gif:
             return await interaction.response.send_message("⚠️ Couldn't fetch a GIF right now.", ephemeral=True)
@@ -63,12 +92,9 @@ class Social(commands.Cog):
         embed.set_image(url=gif)
         embed.set_footer(text=f"Requested by {interaction.user}", icon_url=interaction.user.display_avatar.url)
 
-        # Add reply button if a target user exists
-        view = None
-        if target and target != interaction.user:
-            view = ReplyButton(self.bot, action, endpoint, interaction.user, target)
-
+        view = ReplyButton(self.bot, action, endpoint, interaction.user, target)
         await interaction.response.send_message(embed=embed, view=view)
+
 
     # ——— Interaction Commands ——— #
 
@@ -124,13 +150,6 @@ class Social(commands.Cog):
     async def highfive(self, interaction: discord.Interaction, user: discord.User):
         await self.send_interaction(interaction, user, "highfive", "highfive",
             f"✋ {interaction.user.mention} high-fives {user.mention}!")
-
-    """@app_commands.command(name="bonk", description="Bonk someone who’s being silly.")
-    @app_commands.describe(user="The user you want to bonk")
-    @app_commands.checks.cooldown(1, 300, key=lambda i: i.user.id)
-    async def bonk(self, interaction: discord.Interaction, user: discord.User):
-        await self.send_interaction(interaction, user, "bonk", "bonk",
-            f"🔨 {interaction.user.mention} bonks {user.mention} for being silly!")"""
 
     @app_commands.command(name="slap", description="Slap someone (playfully or dramatically).")
     @app_commands.describe(user="The user you want to slap")
