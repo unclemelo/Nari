@@ -190,7 +190,7 @@ class Royale(commands.Cog):
             ).set_footer(text="Available 24/7 — English & Spanish")
             return await interaction.followup.send(embed=embed, ephemeral=True)
 
-        if interaction.user.name == "pitr1010":
+        if member.user.name == "pitr1010":
             return await interaction.followup.send("❌ I'm not going down that easily!", ephemeral=True)
 
         if member == interaction.guild.me:
