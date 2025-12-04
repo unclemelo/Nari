@@ -190,9 +190,17 @@ class Royale(commands.Cog):
             ).set_footer(text="Available 24/7 — English & Spanish")
             return await interaction.followup.send(embed=embed, ephemeral=True)
 
-        if member == interaction.guild.me:
+        if interaction.user.name == "pitr1010":
             return await interaction.followup.send("❌ I'm not going down that easily!", ephemeral=True)
 
+        if member == interaction.guild.me:
+            return await interaction.followup.send("❌ I'm not going down that easily!", ephemeral=True)
+        
+        if member.timeout > 1800:
+            return await interaction.response.send_message(
+                "⏳ That user is alredy knocked out!", ephemeral=True
+            )
+        
         # === Weapon Selection ===
         weapon_keys = list(self.weapons.keys())
         weights = []
@@ -317,7 +325,12 @@ class Royale(commands.Cog):
             return await interaction.response.send_message(
                 "⚖️ Only those knocked out by the bot can be revived!", ephemeral=True
             )
-
+        
+        if member.timeout > 1800:
+            return await interaction.response.send_message(
+                "⏳ That user isn't ready to be revived yet!", ephemeral=True
+            )
+        
         outcome = random.choices(["fail","success","miracle"], weights=[0.3,0.6,0.1])[0]
         embed = discord.Embed(color=discord.Color.blurple())
         embed.set_footer(text=f"🕐 Cooldown: {config.get('revive_cooldown',600)//60} min")
