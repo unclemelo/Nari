@@ -38,7 +38,7 @@ class Moderation(commands.Cog):
     def ensure_guild_user(self, guild_id: str, user_id: str):
         self.warnings.setdefault(guild_id, {}).setdefault(user_id, [])
 
-    def build_embed(self, title: str, description: str = None, color: discord.Color = discord.Color.blurple()):
+    def build_embed(self, title: str, description: str | None = None, color: discord.Color = discord.Color.blurple()):
         embed = discord.Embed(title=title, description=description, color=color)
         embed.set_footer(text="Nari Moderation System")
         return embed
@@ -49,7 +49,7 @@ class Moderation(commands.Cog):
             return
         channel_id = self.log_channels[guild_id]
         channel = guild.get_channel(channel_id)
-        if channel:
+        if isinstance(channel, discord.TextChannel):
             await channel.send(embed=embed)
 
     async def dm_user(self, member: discord.Member, embed: discord.Embed):
@@ -61,8 +61,8 @@ class Moderation(commands.Cog):
     async def respond_and_delete(
         self,
         interaction: discord.Interaction,
-        content=None,
-        embed: discord.Embed = None,
+        content: str,
+        embed: discord.Embed | None = None,
         ephemeral=True,
         delay=5
     ):
@@ -74,7 +74,7 @@ class Moderation(commands.Cog):
             await interaction.response.send_message(content=content, embed=embed, ephemeral=ephemeral)
         except discord.errors.InteractionResponded:
             # fallback if already responded
-            await interaction.followup.send(content=content, embed=embed, ephemeral=ephemeral)
+            await interaction.followup.send(content=content, embed=embed, ephemeral=ephemeral) if embed else await interaction.followup.send(content=content, ephemeral=ephemeral)
 
         # Delete after delay
         try:
@@ -281,7 +281,7 @@ class Moderation(commands.Cog):
                 f"**Moderator:** {interaction.user.mention} (`{interaction.user.id}`)\n"
                 f"**Reason:** {reason}\n"
                 f"**Timestamp:** <t:{int(discord.utils.utcnow().timestamp())}:F>",
-                discord.Color.red
+                discord.Color.red()
             )
             log_embed.set_thumbnail(url=member.display_avatar.url)
             await self.send_mod_log(interaction.guild, log_embed)
