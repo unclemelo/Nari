@@ -266,7 +266,7 @@ class Moderation(commands.Cog):
 
     @app_commands.command(name="ban", description="Ban a user from the server.")
     @app_commands.checks.has_permissions(ban_members=True)
-    async def ban_cmd(self, interaction: discord.Interaction, member: discord.Member, reason: str = "No reason provided"):
+    async def ban_cmd(self, interaction: discord.Interaction, member: discord.User, reason: str = "No reason provided"):
         if member.top_role >= interaction.user.top_role:
             return await self.respond_and_delete(interaction, content="You can't ban someone with an equal or higher role.")
 
@@ -292,15 +292,17 @@ class Moderation(commands.Cog):
 
     @app_commands.command(name="unban", description="Unban a user by their ID.")
     @app_commands.checks.has_permissions(ban_members=True)
-    async def unban_cmd(self, interaction: discord.Interaction, member: discord.User):
+    async def unban_cmd(self, interaction: discord.Interaction, member: discord.User, reason: str = "No reason provided"):
         try:
-            user = await self.bot.fetch_user(member)
-            await interaction.guild.unban(user)
+            dm_embed = self.build_embed("🔨 You’ve been unbanned!", f"Server: **{interaction.guild.name}**\nReason: {reason}")
+            await self.dm_user(member, dm_embed)
+            await member.unban(reason=reason)
 
             log_embed = self.build_embed(
                 "✨ User Unbanned",
-                f"**User:** {user} (`{user.id}`)\n"
+                f"**User:** {member} (`{member.id}`)\n"
                 f"**Moderator:** {interaction.user.mention} (`{interaction.user.id}`)\n"
+                f"**Reason:** {reason}\n"
                 f"**Timestamp:** <t:{int(discord.utils.utcnow().timestamp())}:F>",
                 discord.Color.green()
             )
