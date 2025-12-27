@@ -55,6 +55,7 @@ class Social(commands.Cog):
                 return None
 
     async def send_interaction(self, interaction, target, action, endpoint, description):
+        await interaction.response.defer()
         # Detect self-target
         if target == interaction.user:
             # Fetch gif normally
@@ -81,19 +82,19 @@ class Social(commands.Cog):
             embed.set_footer(text=f"Requested by {interaction.user}", icon_url=interaction.user.display_avatar.url)
 
             # No reply button for self-actions
-            return await interaction.response.send_message(embed=embed)
+            return await interaction.followup.send(embed=embed)
 
         # ————— Normal interaction for two users ————— #
         gif = await self.fetch_gif(endpoint)
         if not gif:
-            return await interaction.response.send_message("⚠️ Couldn't fetch a GIF right now.", ephemeral=True)
+            return await interaction.followup.send("⚠️ Couldn't fetch a GIF right now.", ephemeral=True)
 
         embed = discord.Embed(description=description, color=discord.Color.pink())
         embed.set_image(url=gif)
         embed.set_footer(text=f"Requested by {interaction.user}", icon_url=interaction.user.display_avatar.url)
 
         view = ReplyButton(self.bot, action, endpoint, interaction.user, target)
-        await interaction.response.send_message(embed=embed, view=view)
+        await interaction.followup.send(embed=embed, view=view)
 
 
     # ——— Interaction Commands ——— #

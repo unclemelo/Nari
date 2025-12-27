@@ -38,7 +38,7 @@ class Moderation(commands.Cog):
     def ensure_guild_user(self, guild_id: str, user_id: str):
         self.warnings.setdefault(guild_id, {}).setdefault(user_id, [])
 
-    def build_embed(self, title: str, description: str | None = None, color: discord.Color = discord.Color.blurple()):
+    def build_embed(self, title: str, description: str = None, color: discord.Color = discord.Color.blurple()):
         embed = discord.Embed(title=title, description=description, color=color)
         embed.set_footer(text="Nari Moderation System")
         return embed
@@ -49,7 +49,7 @@ class Moderation(commands.Cog):
             return
         channel_id = self.log_channels[guild_id]
         channel = guild.get_channel(channel_id)
-        if isinstance(channel, discord.TextChannel):
+        if channel:
             await channel.send(embed=embed)
 
     async def dm_user(self, member: discord.Member, embed: discord.Embed):
@@ -61,8 +61,8 @@ class Moderation(commands.Cog):
     async def respond_and_delete(
         self,
         interaction: discord.Interaction,
-        content: str,
-        embed: discord.Embed | None = None,
+        content=None,
+        embed: discord.Embed = None,
         ephemeral=True,
         delay=5
     ):
@@ -74,7 +74,7 @@ class Moderation(commands.Cog):
             await interaction.response.send_message(content=content, embed=embed, ephemeral=ephemeral)
         except discord.errors.InteractionResponded:
             # fallback if already responded
-            await interaction.followup.send(content=content, embed=embed, ephemeral=ephemeral) if embed else await interaction.followup.send(content=content, ephemeral=ephemeral)
+            await interaction.followup.send(content=content, embed=embed, ephemeral=ephemeral)
 
         # Delete after delay
         try:
