@@ -292,7 +292,7 @@ class Moderation(commands.Cog):
 
     @app_commands.command(name="unban", description="Unban a user by their ID.")
     @app_commands.checks.has_permissions(ban_members=True)
-    async def unban_cmd(self, interaction: discord.Interaction, member: discord.Member):
+    async def unban_cmd(self, interaction: discord.Interaction, member: discord.User):
         try:
             user = await self.bot.fetch_user(member)
             await interaction.guild.unban(user)
