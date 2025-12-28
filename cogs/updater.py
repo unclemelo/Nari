@@ -76,7 +76,7 @@ class Updater(commands.Cog):
             await interaction.followup.send(embed=embed)
 
             await asyncio.sleep(3)
-            os.execv(sys.executable, ["python"] + sys.argv)
+            os.execv(sys.executable, ["python3"] + sys.argv)
 
         except Exception as e:
             await self.send_error_embed(interaction, e, "update")
