@@ -7,6 +7,8 @@ from discord.ext import commands
 from datetime import timedelta
 from util.command_checks import command_enabled
 import asyncio
+from typing import Optional
+
 
 WARN_FILE = 'data/warns.json'
 LOG_FILE = 'data/modlogs.json'
@@ -178,6 +180,85 @@ class Moderation(commands.Cog):
         await self.send_mod_log(interaction.guild, log_embed)
 
         await self.respond_and_delete(interaction, embed=self.build_embed(f"🧹 Cleared {count} warnings from {member.display_name}.", color=discord.Color.green()))
+        
+    @app_commands.command(
+        name="purge",
+        description="Delete messages from a channel (optionally from a specific user)."
+    )
+    @app_commands.checks.has_permissions(manage_messages=True)
+    @app_commands.describe(
+        amount="Number of messages to delete (0 = delete as many as possible)",
+        user="Only delete messages from this user"
+    )
+    async def purge_cmd(
+        self,
+        interaction: discord.Interaction,
+        amount: int,
+        user: Optional[discord.Member] = None
+    ):
+        if amount < 0:
+            return await self.respond_and_delete(
+                interaction,
+                content="❌ Amount must be 0 or higher."
+            )
+
+        channel = interaction.channel
+        await interaction.response.defer(ephemeral=True)
+
+        deleted = 0
+        limit = None if amount == 0 else amount
+
+        def check(msg: discord.Message):
+            return user is None or msg.author.id == user.id
+
+        try:
+            while True:
+                to_delete = []
+
+                async for msg in channel.history(limit=100):
+                    if check(msg):
+                        to_delete.append(msg)
+                    if limit and len(to_delete) >= limit - deleted:
+                        break
+
+                if not to_delete:
+                    break
+
+                await channel.delete_messages(to_delete)
+                deleted += len(to_delete)
+
+                if limit and deleted >= limit:
+                    break
+
+                await asyncio.sleep(1)  # prevent rate limits
+
+        except discord.Forbidden:
+            return await interaction.followup.send(
+                "❌ I don't have permission to delete messages.",
+                ephemeral=True
+            )
+
+        # ─── Log ─────────────────────────────────────
+        log_embed = self.build_embed(
+            "🧹 Messages Purged",
+            f"**Channel:** {channel.mention}\n"
+            f"**Moderator:** {interaction.user.mention}\n"
+            f"**Target:** {user.mention if user else 'Everyone'}\n"
+            f"**Deleted:** {deleted}",
+            discord.Color.red()
+        )
+        await self.send_mod_log(interaction.guild, log_embed)
+
+        # ─── Confirmation ────────────────────────────
+        await interaction.followup.send(
+            embed=self.build_embed(
+                "🧹 Purge Complete",
+                f"Deleted **{deleted}** messages.",
+                discord.Color.green()
+            ),
+            ephemeral=True
+        )
+
 
     @app_commands.command(name="mute", description="Temporarily mute a user using Discord's timeout system.")
     @app_commands.checks.has_permissions(moderate_members=True)
@@ -286,7 +367,14 @@ class Moderation(commands.Cog):
             log_embed.set_thumbnail(url=member.display_avatar.url)
             await self.send_mod_log(interaction.guild, log_embed)
 
-            await self.respond_and_delete(interaction, embed=self.build_embed(f"🔨 {member.display_name} banned!", f"Reason: {reason}", discord.Color.red()))
+            await interaction.followup.send(
+                embed=self.build_embed(
+                    f"🔨 {member.name} banned!", 
+                    f"Reason: {reason}", 
+                    discord.Color.red()
+                    )
+                )
+
         except Exception as e:
             await self.respond_and_delete(interaction, content=f"❌ Failed to ban {member.mention}.\n`{e}`")
 
