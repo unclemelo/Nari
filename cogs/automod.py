@@ -127,10 +127,6 @@ class SaveConfigButton(discord.ui.Button):
 
         await interaction.followup.send(embed=embed)
 
-        applied = load_json("data/applied_presets.json")
-        applied[str(interaction.guild.id)] = {"preset": data.get("preset"), "hash": hash_preset(rule_data)}
-        save_json("data/applied_presets.json", applied)
-
 # --- View ---
 
 class AutoModSettingsView(discord.ui.View):
@@ -158,38 +154,7 @@ class AutoModSettingsView(discord.ui.View):
 class AutoModManager(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.update_presets_task.start()
 
-    @tasks.loop(hours=5)
-    async def update_presets_task(self):
-        await self.bot.wait_until_ready()
-        try:
-            applied = load_json("data/applied_presets.json")
-            current = load_json("data/ampres.json")
-        except Exception as e:
-            print(f"Error reading preset files: {e}")
-            return
-
-        for guild in self.bot.guilds:
-            data = applied.get(str(guild.id))
-            if not data:
-                continue
-            preset_name = data.get("preset")
-            current_data = current.get(preset_name)
-            if not current_data:
-                continue
-
-            new_hash = hash_preset(current_data)
-            if new_hash != data.get("hash"):
-                try:
-                    await guild.owner.send(
-                        f"🔄 AutoMod preset '{preset_name}' has changed and was auto-updated on {guild.name}."
-                    )
-                    applied[str(guild.id)]["hash"] = new_hash
-                except Exception as e:
-                    print(f"Failed to DM owner of {guild.name}: {e}")
-
-        save_json("data/applied_presets.json", applied)
 
     # Setup command with modal-enabled UI
     @app_commands.command(name="setup", description="Interactively set up AutoMod for your server.")
@@ -201,114 +166,6 @@ class AutoModManager(commands.Cog):
         await interaction.response.send_message(
             "🔧 Use the menu below to configure AutoMod settings.", view=view, ephemeral=True
         )
-
-    # Force update preset command
-    @app_commands.command(name="force_update", description="Manually update the AutoMod preset.")
-    @app_commands.checks.has_permissions(manage_guild=True)
-    @command_enabled()
-    async def force_update(self, interaction: discord.Interaction):
-        try:
-            guild = interaction.guild
-            applied = load_json("data/applied_presets.json")
-            current = load_json("data/ampres.json")
-
-            settings = applied.get(str(guild.id))
-            if not settings:
-                await interaction.response.send_message("❌ No preset applied yet.", ephemeral=True)
-                return
-
-            preset_name = settings["preset"]
-            rule_data = current.get(preset_name)
-            await apply_automod_rule(guild, interaction.channel, rule_data, [], [])
-
-            settings["hash"] = hash_preset(rule_data)
-            save_json("data/applied_presets.json", applied)
-            await interaction.response.send_message(f"✅ AutoMod preset **{preset_name}** manually updated!", ephemeral=True)
-        except Exception as e:
-            await interaction.response.send_message(f"❌ Error: {e}", ephemeral=True)
-
-    # New command: show current AutoMod config summary
-    @app_commands.command(name="show_config", description="Show current AutoMod configuration for this server.")
-    @app_commands.checks.has_permissions(manage_guild=True)
-    @command_enabled()
-    async def show_config(self, interaction: discord.Interaction):
-        applied = load_json("data/applied_presets.json")
-        current = load_json("data/ampres.json")
-        data = applied.get(str(interaction.guild.id))
-
-        if not data:
-            await interaction.response.send_message("❌ No AutoMod configuration found for this server.", ephemeral=True)
-            return
-
-        preset_name = data.get("preset")
-        rule_data = current.get(preset_name, {})
-
-        exempt_roles = []
-        exempt_channels = []
-        # Try to read temp data for current user for convenience
-        temp = get_temp_data(self.bot, interaction.user.id)
-        if "exempt_roles" in temp:
-            exempt_roles = temp["exempt_roles"]
-        if "exempt_channels" in temp:
-            exempt_channels = temp["exempt_channels"]
-
-        embed = discord.Embed(
-            title=f"AutoMod Configuration: {preset_name}",
-            color=discord.Color.blue()
-        )
-
-        regex_patterns = rule_data.get("regex_patterns", [])
-        keyword_filters = rule_data.get("keyword_filter", [])
-        allowed_keywords = rule_data.get("allowed_keywords", [])
-
-        embed.add_field(
-            name="🧠 Regular Expressions",
-            value=f"```regex\n{chr(10).join(regex_patterns) if regex_patterns else 'None'}```",
-            inline=False
-        )
-
-        blocked = ', '.join(keyword_filters) if keyword_filters else 'None'
-        allowed = ', '.join(allowed_keywords) if allowed_keywords else 'None'
-
-        embed.add_field(
-            name="📝 Blocked Keywords",
-            value=f"```\n{blocked}\n```",
-            inline=False
-        )
-
-        embed.add_field(
-            name="🚫 Allowed Keywords",
-            value=f"```\n{allowed}\n```",
-            inline=False
-        )
-
-
-        embed.add_field(
-            name="🎭 Exempt Roles",
-            value=", ".join(role.mention for role in exempt_roles if role) if exempt_roles else "None",
-            inline=True
-        )
-
-        embed.add_field(
-            name="💬 Exempt Channels",
-            value=", ".join(channel.mention for channel in exempt_channels if channel) if exempt_channels else "None",
-            inline=True
-        )
-
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-
-    # New command: clear current AutoMod config for the guild
-    @app_commands.command(name="clear_config", description="Clear the current AutoMod configuration.")
-    @app_commands.checks.has_permissions(manage_guild=True)
-    @command_enabled()
-    async def clear_config(self, interaction: discord.Interaction):
-        applied = load_json("data/applied_presets.json")
-        if str(interaction.guild.id) in applied:
-            del applied[str(interaction.guild.id)]
-            save_json("data/applied_presets.json", applied)
-            await interaction.response.send_message("✅ AutoMod configuration cleared for this server.", ephemeral=True)
-        else:
-            await interaction.response.send_message("❌ No AutoMod configuration found to clear.", ephemeral=True)
 
     # New command: explicitly set log channel for AutoMod alerts
     @app_commands.command(name="set_log_channel", description="Set the channel for AutoMod alerts.")
