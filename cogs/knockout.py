@@ -257,6 +257,13 @@ class Knockout(commands.Cog):
                 color=discord.Color.red()
             ).set_footer(text="Available 24/7 — English & Spanish")
             return await interaction.followup.send(embed=embed, ephemeral=True)
+        # ❌ Block knockout if target is in voice chat
+        if member.voice and member.voice.channel:
+            return await interaction.followup.send(
+                f"🎧 You can't knock out {member.mention} while they're in a voice channel.",
+                ephemeral=True
+            )
+
 
         # ❗ FIXED BAD SYNTAX + TIMEOUT CHECK
         # Check if the user is ALREADY timed out
