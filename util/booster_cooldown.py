@@ -3,7 +3,7 @@ from discord.ext import commands
 import time
 from typing import Literal
 
-SUPPORT_SERVER_ID = 1290420853926002789
+SUPPORT_SERVER_ID = lambda interaction: interaction.user.id
 
 BUCKET_TYPES = {
     "user": lambda interaction: interaction.user.id,
