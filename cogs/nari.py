@@ -5,7 +5,7 @@ import platform
 import time
 
 CHANNEL_ID = 1461990186245296329
-MESSAGE_ID = None
+MESSAGE_ID = 1461994336718950410
 
 
 class Nari(commands.Cog):
