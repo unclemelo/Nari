@@ -116,4 +116,4 @@ class ERROR(commands.Cog):
             logging.error(f"Failed to send log to webhook: {e}")
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(ERROR(bot, error_channel_id=1431065718920839170))
+    await bot.add_cog(ERROR(bot, error_channel_id=1461994761551351828))
