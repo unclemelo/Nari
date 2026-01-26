@@ -376,6 +376,7 @@ class Moderation(commands.Cog):
                 )
 
         except Exception as e:
+            print(f"Error: {e}")
             await self.respond_and_delete(interaction, content=f"❌ Failed to ban {member.mention}.\n`{e}`")
 
     @app_commands.command(name="unban", description="Unban a user by their ID.")
