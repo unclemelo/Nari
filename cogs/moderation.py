@@ -408,15 +408,37 @@ class Moderation(commands.Cog):
 
     @app_commands.command(name="ban", description="Ban a user from the server.")
     @app_commands.checks.has_permissions(ban_members=True)
-    async def ban_cmd(self, interaction: discord.Interaction, member: discord.User, reason: str = "No reason provided"):
+    async def ban_cmd(
+        self,
+        interaction: discord.Interaction,
+        member: discord.Member,
+        reason: str = "No reason provided",
+    ):
+        # ACK IMMEDIATELY
+        await interaction.response.defer(thinking=True)
+
+        # Role hierarchy check
         if member.top_role >= interaction.user.top_role:
-            return await self.respond_and_delete(interaction, content="You can't ban someone with an equal or higher role.")
+            return await interaction.followup.send(
+                content="❌ You can't ban someone with an equal or higher role.",
+                ephemeral=True
+            )
 
         try:
-            dm_embed = self.build_embed("🔨 You’ve been banned!", f"Server: **{interaction.guild.name}**\nReason: {reason}")
-            await self.dm_user(member, dm_embed)
+            # DM user (failure should NOT stop the ban)
+            try:
+                dm_embed = self.build_embed(
+                    "🔨 You’ve been banned!",
+                    f"Server: **{interaction.guild.name}**\nReason: {reason}"
+                )
+                await member.send(embed=dm_embed)
+            except discord.Forbidden:
+                pass  # User has DMs closed
+
+            # Ban
             await member.ban(reason=reason)
 
+            # Mod log
             log_embed = self.build_embed(
                 "🔨 Member Banned",
                 f"**User:** {member.mention} (`{member.id}`)\n"
@@ -428,17 +450,27 @@ class Moderation(commands.Cog):
             log_embed.set_thumbnail(url=member.display_avatar.url)
             await self.send_mod_log(interaction.guild, log_embed)
 
+            # Success response
             await interaction.followup.send(
                 embed=self.build_embed(
-                    f"🔨 {member.name} banned!", 
-                    f"Reason: {reason}", 
+                    f"🔨 {member.name} banned!",
+                    f"Reason: {reason}",
                     discord.Color.red()
-                    )
                 )
+            )
 
         except Exception as e:
-            print(f"Error: {e}")
-            await self.respond_and_delete(interaction, content=f"❌ Failed to ban {member.mention}.\n`{e}`")
+            print(f"[BAN ERROR] {e}")
+
+            # Interaction-safe error response
+            try:
+                await interaction.followup.send(
+                    content=f"❌ Failed to ban {member.mention}.\n`{e}`",
+                    ephemeral=True
+                )
+            except discord.NotFound:
+                pass  # Interaction expired — nothing we can do
+
 
     @app_commands.command(name="unban", description="Unban a user by their ID.")
     @app_commands.checks.has_permissions(ban_members=True)
