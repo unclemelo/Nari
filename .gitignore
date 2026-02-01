@@ -10,3 +10,4 @@ venv/
 bot_errors.log
 data/modlogs.json
 data/deathlog.json
+data/server_pet.json
