@@ -490,7 +490,7 @@ class Moderation(commands.Cog):
             )
             await self.send_mod_log(interaction.guild, log_embed)
 
-            await self.respond_and_delete(interaction, embed=self.build_embed(f"✨ {user.name} unbanned!", "Let's hope they behave this time.", discord.Color.green()))
+            await self.respond_and_delete(interaction, embed=self.build_embed(f"✨ {member.name} unbanned!", "Let's hope they behave this time.", discord.Color.green()))
         except Exception as e:
             await self.respond_and_delete(interaction, content=f"❌ Couldn't unban that user.\n`{e}`")
 
