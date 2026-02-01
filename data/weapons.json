@@ -113,25 +113,6 @@
       "They dodged your bonk with anime reflexes."
     ]
   },
-  "nuke": {
-    "title": "☢️ NUCLEAR STRIKE!",
-    "timeout": "all_members",
-    "xp_multiplier": 5.0,
-    "gif": "https://cdn.discordapp.com/attachments/1422776966582374400/1435821022673895496/kaboom.gif?ex=690d5c08&is=690c0a88&hm=ee3330fb4eaaf428722ce15a4ea01fb1d6a0199e1b944512d03d7bf460d7b8e2&",
-    "lines": [
-      "💥 Server annihilated!",
-      "Everyone got obliterated!",
-      "The apocalypse is now digital!"
-    ],
-    "crit_lines": [
-      "💣 Absolute devastation! No one survives!",
-      "Time itself shook from that strike!"
-    ],
-    "miss_lines": [
-      "You launched it backwards... lucky escape?",
-      "The nuke fizzled. Someone call maintenance!"
-    ]
-  },
   "garande_hug": {
     "title": "🤗 Garande Hug!",
     "timeout": "last_5_chatters",
