@@ -85,6 +85,67 @@ class Moderation(commands.Cog):
         except Exception:
             pass
 
+    @commands.Cog.listener()
+    async def on_audit_log_entry_create(
+        self,
+        entry: discord.AuditLogEntry
+    ):
+        if entry.action not in {
+            discord.AuditLogAction.automod_rule_create,
+            discord.AuditLogAction.automod_rule_update,
+            discord.AuditLogAction.automod_rule_delete
+        }:
+            return
+
+        guild = entry.guild
+        moderator = entry.user
+        rule = entry.target  # May be partial
+
+        action_map = {
+            discord.AuditLogAction.automod_rule_create: "🆕 AutoMod Rule Created",
+            discord.AuditLogAction.automod_rule_update: "✏️ AutoMod Rule Updated",
+            discord.AuditLogAction.automod_rule_delete: "🗑️ AutoMod Rule Deleted",
+        }
+
+        embed = self.build_embed(
+            action_map[entry.action],
+            color=discord.Color.orange()
+        )
+
+        embed.add_field(
+            name="Moderator",
+            value=f"{moderator.mention} (`{moderator.id}`)",
+            inline=False
+        )
+
+        if rule:
+            embed.add_field(
+                name="Rule",
+                value=f"**{getattr(rule, 'name', 'Unknown')}**\n`{getattr(rule, 'id', 'N/A')}`",
+                inline=False
+            )
+
+        # Show what changed (if Discord provides it)
+        if entry.changes:
+            for change in entry.changes:
+                before = change.before if change.before is not None else "None"
+                after = change.after if change.after is not None else "None"
+
+                embed.add_field(
+                    name=change.attribute.replace("_", " ").title(),
+                    value=f"**Before:** {before}\n**After:** {after}",
+                    inline=False
+                )
+
+        embed.add_field(
+            name="Timestamp",
+            value=f"<t:{int(discord.utils.utcnow().timestamp())}:F>",
+            inline=False
+        )
+
+        await self.send_mod_log(guild, embed)
+
+
     # ───────────────────────────────────────────────
     # Configuration command
     # ───────────────────────────────────────────────
