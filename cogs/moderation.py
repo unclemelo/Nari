@@ -478,7 +478,7 @@ class Moderation(commands.Cog):
         try:
             dm_embed = self.build_embed("🔨 You’ve been unbanned!", f"Server: **{interaction.guild.name}**\nReason: {reason}")
             await self.dm_user(member, dm_embed)
-            await member.unban(reason=reason)
+            await interaction.guild.unban(member, reason=reason)
 
             log_embed = self.build_embed(
                 "✨ User Unbanned",
