@@ -112,7 +112,7 @@ class ErrorHandler(commands.Cog):
             if isinstance(error, exc):
                 return message
 
-        return "❌ An unexpected error occurred. The developers have been notified."
+        return "❌ An unexpected error occurred. The developers have been notified.\nIf you wanna give us more details feel free to join our support server\nhttps://discord.gg/Jd5kSsvb56"
 
     def is_expected_error(self, error: Exception) -> bool:
         return isinstance(
