@@ -66,7 +66,6 @@ class Social(commands.Cog):
             # Custom cute message for self-hug/pat/etc.
             self_messages = {
                 "hug": "🫂 Sometimes we all need a hug... even from ourselves.",
-                "kiss": "💋 Self-love is important! Treat yourself kindly.",
                 "pat": "🤗 It's okay to give yourself some encouragement.",
                 "snuggle": "🫶 Cozying up with yourself counts too!",
                 "poke": "👉 You poked yourself... why tho?",
@@ -98,13 +97,6 @@ class Social(commands.Cog):
 
 
     # ——— Interaction Commands ——— #
-
-    @app_commands.command(name="kiss", description="Kiss someone affectionately.")
-    @app_commands.describe(user="The user you want to kiss")
-    @app_commands.checks.cooldown(1, 300, key=lambda i: i.user.id)
-    async def kiss(self, interaction: discord.Interaction, user: discord.User):
-        await self.send_interaction(interaction, user, "kiss", "kiss",
-            f"💋 {interaction.user.mention} kisses {user.mention}!")
 
     @app_commands.command(name="hug", description="Hug someone warmly.")
     @app_commands.describe(user="The user you want to hug")
@@ -158,26 +150,6 @@ class Social(commands.Cog):
     async def slap(self, interaction: discord.Interaction, user: discord.User):
         await self.send_interaction(interaction, user, "slap", "slap",
             f"👋 {interaction.user.mention} slaps {user.mention}!")
-
-    @app_commands.command(name="interactlist", description="Show all interaction commands available.")
-    async def interactlist(self, interaction: discord.Interaction):
-        commands = [
-            "`/kiss <user>` — Kiss someone affectionately.",
-            "`/hug <user>` — Hug someone warmly.",
-            "`/pat <user>` — Pat someone on the head.",
-            "`/snuggle <user>` — Cuddle someone warmly.",
-            "`/poke <user>` — Playfully poke another user.",
-            "`/blush` — React with embarrassment or shyness.",
-            "`/highfive <user>` — High-five a friend.",
-            "`/slap <user>` — Slap someone playfully or dramatically.",
-        ]
-
-        embed = discord.Embed(
-            title="💞 Interaction Commands",
-            description="\n".join(commands),
-            color=discord.Color.pink()
-        )
-        await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot):
