@@ -16,22 +16,38 @@ class ReplyButton(discord.ui.View):
 
     @discord.ui.button(label="Reply back 💞", style=discord.ButtonStyle.blurple)
     async def reply_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # Prevent self-spam (only target can reply)
+        # Only target can reply
         if interaction.user.id != self.target.id:
-            return await interaction.response.send_message("❌ Only the mentioned user can reply back!", ephemeral=True)
+            return await interaction.response.send_message(
+                "❌ Only the mentioned user can reply back!",
+                ephemeral=True
+            )
 
         gif = await self.fetch_gif(self.endpoint)
         if not gif:
-            return await interaction.response.send_message("⚠️ Couldn't fetch a GIF right now.", ephemeral=True)
+            return await interaction.response.send_message(
+                "⚠️ Couldn't fetch a GIF right now.",
+                ephemeral=True
+            )
 
         embed = discord.Embed(
             description=f"💫 {interaction.user.mention} {self.action_name}s {self.author.mention} back!",
             color=discord.Color.pink()
         )
         embed.set_image(url=gif)
-        embed.set_footer(text=f"Requested by {interaction.user}", icon_url=interaction.user.display_avatar.url)
+        embed.set_footer(
+            text=f"Requested by {interaction.user}",
+            icon_url=interaction.user.display_avatar.url
+        )
+
+        # 🔒 Disable the button
+        button.disabled = True
+        await interaction.message.edit(view=self)
+
         await interaction.response.send_message(embed=embed)
+
         self.stop()
+
 
     async def fetch_gif(self, endpoint):
         async with aiohttp.ClientSession() as session:
