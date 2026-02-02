@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 WARN_FILE = "data/warns.json"
 LOG_FILE = "data/modlogs.json"
+BOT_CAT = 1435514424197775462
 
 
 class Helpers(commands.Cog):
@@ -127,6 +128,38 @@ class Helpers(commands.Cog):
     def cog_unload(self):
         """Ensure background task stops when cog unloads."""
         self.auto_warn_cleanup.cancel()
+    
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        # Ignore DMs
+        if not message.guild:
+            return
+
+        # Only care about bot messages
+        if not message.author.bot:
+            return
+
+        # Ignore THIS bot (the helper bot itself)
+        if message.author.id == self.bot.user.id:
+            return
+
+        # Channel must be in the allowed category
+        category = message.channel.category
+        if category and category.id == BOT_CAT:
+            return
+
+        # Safety: check perms before trying to delete
+        if not message.channel.permissions_for(message.guild.me).manage_messages:
+            return
+
+        # Delete after 5 seconds
+        try:
+            await message.delete(delay=5)
+        except discord.NotFound:
+            pass
+        except discord.Forbidden:
+            pass
+
 
 
 async def setup(bot: commands.Bot):
