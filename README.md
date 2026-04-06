@@ -35,3 +35,20 @@ And somehow, she always does. Eventually.
 - Calls her sister *“Mel-Mel”* to annoy her.  
 - Favorite phrase: “If it crashes, it’s just the system learning.”  
 - Enjoys watching her developers panic... but will always help them fix it after.  
+
+---
+
+## Setup (UV)
+
+Nari now uses **uv** for dependency management.
+
+```bash
+uv sync
+uv run bot.py
+```
+
+If you update dependencies, run:
+
+```bash
+uv lock
+```

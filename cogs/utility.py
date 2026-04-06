@@ -1,4 +1,8 @@
-import discord, platform, psutil, datetime, time
+import discord
+import platform
+import psutil
+import datetime
+import time
 from discord.ext import commands
 from discord import app_commands
 
@@ -64,7 +68,8 @@ class Utility(commands.Cog):
     # === /whois ===
     @app_commands.command(name="whois", description="View detailed info about a member.")
     async def whois(self, interaction: discord.Interaction, user: discord.User):
-        member = interaction.guild.get_member(user.id)
+        guild = interaction.guild
+        member = guild.get_member(user.id) if guild else None
         embed = discord.Embed(
             title=f"🔍 Who is {user.name}?",
             color=discord.Color.magenta(),
@@ -77,7 +82,8 @@ class Utility(commands.Cog):
         embed.add_field(name="Created", value=discord.utils.format_dt(user.created_at, style='R'), inline=True)
 
         if member:
-            embed.add_field(name="Joined Server", value=discord.utils.format_dt(member.joined_at, style='R'), inline=True)
+            if member.joined_at:
+                embed.add_field(name="Joined Server", value=discord.utils.format_dt(member.joined_at, style='R'), inline=True)
             embed.add_field(name="Roles", value=", ".join([r.mention for r in member.roles[1:]]) or "None", inline=False)
         else:
             embed.add_field(name="Member Status", value="Not in this server", inline=False)
@@ -102,26 +108,38 @@ class Utility(commands.Cog):
 
     # === /avatar ===
     @app_commands.command(name="avatar", description="Get a user's avatar or banner.")
-    async def avatar(self, interaction: discord.Interaction, user: discord.User = None):
-        user = user or interaction.user
+    async def avatar(
+        self,
+        interaction: discord.Interaction,
+        user: discord.User | discord.Member | None = None,
+    ):
+        target: discord.abc.User = user or interaction.user
         embed = discord.Embed(
-            title=f"🖼️ Avatar — {user.name}",
+            title=f"🖼️ Avatar — {target.name}",
             color=discord.Color.random()
         )
-        embed.set_image(url=user.avatar.url if user.avatar else user.default_avatar.url)
+        embed.set_image(url=target.avatar.url if target.avatar else target.default_avatar.url)
         await interaction.response.send_message(embed=embed)
 
     # === /serverinfo ===
     @app_commands.command(name="serverinfo", description="Show info about the current server.")
     async def serverinfo(self, interaction: discord.Interaction):
         guild = interaction.guild
+        if guild is None:
+            return await interaction.response.send_message(
+                "This command can only be used in a server.",
+                ephemeral=True,
+            )
+
         embed = discord.Embed(
             title=f"🏰 Server Info — {guild.name}",
             color=discord.Color.gold()
         )
-        embed.set_thumbnail(url=guild.icon.url if guild.icon else discord.Embed.Empty)
+        if guild.icon:
+            embed.set_thumbnail(url=guild.icon.url)
+        owner_mention = guild.owner.mention if guild.owner else "Unknown"
         embed.add_field(name="Server ID", value=f"`{guild.id}`", inline=True)
-        embed.add_field(name="Owner", value=f"{guild.owner.mention}", inline=True)
+        embed.add_field(name="Owner", value=owner_mention, inline=True)
         embed.add_field(name="Members", value=f"`{guild.member_count}`", inline=True)
         embed.add_field(name="Channels", value=f"`{len(guild.channels)}`", inline=True)
         embed.add_field(name="Roles", value=f"`{len(guild.roles)}`", inline=True)

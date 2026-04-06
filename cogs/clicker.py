@@ -16,7 +16,7 @@ class PetView(discord.ui.View):
         self.cog = cog
 
     async def interact(self, interaction: discord.Interaction, amount: int):
-        if interaction.channel.id != PET_CHANNEL_ID:
+        if not interaction.channel or interaction.channel.id != PET_CHANNEL_ID:
             return await interaction.response.send_message(
                 "❌ The server pet lives in its own channel!",
                 ephemeral=True
@@ -99,13 +99,13 @@ class ServerPet(commands.Cog):
 
     async def update_status_message(self):
         channel = self.bot.get_channel(PET_CHANNEL_ID)
-        if not channel:
+        if not isinstance(channel, discord.TextChannel):
             return
 
         try:
             msg = await channel.fetch_message(self.state["status_message_id"])
             await msg.edit(embed=self.build_status_embed(), view=PetView(self))
-        except:
+        except Exception:
             msg = await channel.send(
                 embed=self.build_status_embed(),
                 view=PetView(self)
@@ -149,6 +149,8 @@ class ServerPet(commands.Cog):
 
     async def finish_cycle(self):
         channel = self.bot.get_channel(PET_CHANNEL_ID)
+        if not isinstance(channel, discord.TextChannel):
+            return
 
         leaderboard = sorted(
             self.state["contributors"].items(),

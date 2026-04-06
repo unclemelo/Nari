@@ -8,9 +8,10 @@ class AntiRaid(commands.Cog):
         self.bot = bot
         self.antiraid_enabled = {}  # guild_id: bool
 
+    @staticmethod
     def is_admin():
         async def predicate(interaction: discord.Interaction):
-            if interaction.user.guild_permissions.administrator:
+            if isinstance(interaction.user, discord.Member) and interaction.user.guild_permissions.administrator:
                 return True
             embed = discord.Embed(
                 title="🚫 Access Denied",
@@ -30,9 +31,26 @@ class AntiRaid(commands.Cog):
     )
     @app_commands.describe(reason="Optional reason for the lockdown (only when enabling)")
     @is_admin()
-    async def antiraid(self, interaction: discord.Interaction, state: app_commands.Choice[str], reason: str = None):
+    async def antiraid(
+        self,
+        interaction: discord.Interaction,
+        state: app_commands.Choice[str],
+        reason: str | None = None,
+    ):
         guild = interaction.guild
+        if guild is None:
+            return await interaction.response.send_message(
+                "This command can only be used in a server.",
+                ephemeral=True,
+            )
+
         guild_id = guild.id
+        me = guild.me
+        if me is None:
+            return await interaction.response.send_message(
+                "I couldn't resolve my guild member state.",
+                ephemeral=True,
+            )
 
         # ===========================
         # ENABLE LOCKDOWN
@@ -62,9 +80,9 @@ class AntiRaid(commands.Cog):
             # Send lockdown message & enable slowmode
             for channel in guild.text_channels:
                 try:
-                    if channel.permissions_for(guild.me).send_messages:
+                    if channel.permissions_for(me).send_messages:
                         await channel.send(embed=lockdown_embed)
-                    if channel.permissions_for(guild.me).manage_channels:
+                    if channel.permissions_for(me).manage_channels:
                         await channel.edit(slowmode_delay=5)
                 except Exception:
                     continue
@@ -101,9 +119,9 @@ class AntiRaid(commands.Cog):
 
             for channel in guild.text_channels:
                 try:
-                    if channel.permissions_for(guild.me).manage_channels:
+                    if channel.permissions_for(me).manage_channels:
                         await channel.edit(slowmode_delay=0)
-                    if channel.permissions_for(guild.me).send_messages:
+                    if channel.permissions_for(me).send_messages:
                         await channel.send(embed=unlock_embed)
                 except Exception:
                     continue
@@ -122,6 +140,9 @@ class AntiRaid(commands.Cog):
     async def on_message(self, message: discord.Message):
         # Ignore bots and DMs
         if message.author.bot or not message.guild:
+            return
+
+        if not isinstance(message.author, discord.Member):
             return
 
         guild_id = message.guild.id

@@ -2,6 +2,7 @@ import json
 import os
 import discord
 from functools import wraps
+from discord.ext import commands
 
 CONFIG_FILE = "data/guildConf.json"
 
@@ -68,20 +69,21 @@ def toggle_command(guild_id: int, command_name: str, value: bool, category: str 
 
     save_config(config)
 
-def update_commands_for_guild(bot: discord.Client, guild_id: int):
+async def update_commands_for_guild(bot: commands.Bot, guild_id: int):
     """Syncs the command tree with the server's settings."""
     config = load_config()
     config = ensure_guild_config_structure(config)
-    guild_config = get_guild_config(guild_id)
+
+    existing_names = {command.name for command in bot.tree.get_commands()}
 
     for cmd in bot.tree.get_commands():
         if not is_command_enabled(guild_id, cmd.name):
             bot.tree.remove_command(cmd.name)
         else:
-            if cmd.name not in [command.name for command in bot.tree.commands]:
+            if cmd.name not in existing_names:
                 bot.tree.add_command(cmd)
 
-    bot.tree.sync(guild=discord.Object(id=guild_id))
+    await bot.tree.sync(guild=discord.Object(id=guild_id))
 
 # -------------------------------
 # Decorators
@@ -107,6 +109,10 @@ def dev_only_command():
     def decorator(func):
         @wraps(func)
         async def wrapper(self, interaction: discord.Interaction, *args, **kwargs):
+            if interaction.guild_id is None:
+                return await interaction.response.send_message(
+                    "This command can only be used in a server.", ephemeral=True
+                )
             config = get_guild_config(interaction.guild_id)
             if not config.get("DevOnly", {}).get(func.__name__, False):
                 return await interaction.response.send_message(
@@ -120,6 +126,10 @@ def maintenance_mode():
     def decorator(func):
         @wraps(func)
         async def wrapper(self, interaction: discord.Interaction, *args, **kwargs):
+            if interaction.guild_id is None:
+                return await interaction.response.send_message(
+                    "This command can only be used in a server.", ephemeral=True
+                )
             config = get_guild_config(interaction.guild_id)
             if config.get("UnderMaintenance", {}).get(func.__name__, False):
                 return await interaction.response.send_message(

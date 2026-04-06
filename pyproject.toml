@@ -1,0 +1,17 @@
+[project]
+name = "nari"
+version = "2.0.0"
+description = "Nari Discord bot"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "aiofiles",
+    "aiohttp",
+    "colorama",
+    "discord",
+    "openai",
+    "psutil",
+    "python-dotenv",
+    "pytz",
+    "requests",
+]

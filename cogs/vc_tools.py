@@ -7,6 +7,14 @@ class VCTools(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    @staticmethod
+    def _not_in_vc(member: discord.Member) -> discord.Embed:
+        return discord.Embed(
+            title="⚠️ Not in Voice",
+            description=f"{member.mention} is not in a voice channel.",
+            color=discord.Color.orange(),
+        )
+
     # Move member to another VC
     @app_commands.command(name="move", description="Move a member to another voice channel.")
     @app_commands.checks.has_permissions(move_members=True)

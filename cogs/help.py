@@ -122,7 +122,11 @@ class HelpCommand(commands.Cog):
         app_commands.Choice(name="Fun", value="fun"),
     ])
     @command_enabled()
-    async def help(self, interaction: discord.Interaction, category: app_commands.Choice[str] = None):
+    async def help(
+        self,
+        interaction: discord.Interaction,
+        category: app_commands.Choice[str] | None = None,
+    ):
         selected_category = category.value if category else "all"
         embed = self.build_embed(selected_category)
         view = HelpView(self)
@@ -155,11 +159,8 @@ class HelpView(discord.ui.View):
 
     async def on_timeout(self):
         for child in self.children:
-            child.disabled = True
-        try:
-            await self.message.edit(view=self)
-        except Exception:
-            pass
+            if isinstance(child, (discord.ui.Button, discord.ui.Select)):
+                child.disabled = True
 
 
 async def setup(bot: commands.Bot):

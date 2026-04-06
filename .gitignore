@@ -11,3 +11,12 @@ bot_errors.log
 data/modlogs.json
 data/deathlog.json
 data/server_pet.json
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.ruff_cache/

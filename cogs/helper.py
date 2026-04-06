@@ -50,7 +50,8 @@ class Helpers(commands.Cog):
             return
 
         channel = guild.get_channel(channel_id)
-        if channel and channel.permissions_for(guild.me).send_messages:
+        me = guild.me
+        if isinstance(channel, discord.TextChannel) and me and channel.permissions_for(me).send_messages:
             await channel.send(embed=embed)
 
     # === Background Task ===
@@ -125,7 +126,7 @@ class Helpers(commands.Cog):
         """Wait until the bot is ready before starting the task."""
         await self.bot.wait_until_ready()
 
-    def cog_unload(self):
+    async def cog_unload(self):
         """Ensure background task stops when cog unloads."""
         self.auto_warn_cleanup.cancel()
     
@@ -140,16 +141,17 @@ class Helpers(commands.Cog):
             return
 
         # Ignore THIS bot (the helper bot itself)
-        if message.author.id == self.bot.user.id:
+        if self.bot.user and message.author.id == self.bot.user.id:
             return
 
         # Channel must be in the allowed category
-        category = message.channel.category
+        category = getattr(message.channel, "category", None)
         if category and category.id == BOT_CAT:
             return
 
         # Safety: check perms before trying to delete
-        if not message.channel.permissions_for(message.guild.me).manage_messages:
+        me = message.guild.me
+        if not me or not message.channel.permissions_for(me).manage_messages:
             return
 
         # Delete after 5 seconds

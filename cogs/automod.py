@@ -1,12 +1,11 @@
 import discord
 from discord import app_commands
-from discord.ext import commands, tasks
-import json
-import hashlib
+from discord.ext import commands
 import re
+from typing import Any, Callable
 from util.command_checks import command_enabled
 from util.automod import (
-    hash_preset, get_temp_data, load_json, save_json, apply_automod_rule
+    get_temp_data, load_json, apply_automod_rule
 )
 
 Presets = load_json("data/ampres.json")
@@ -116,7 +115,8 @@ class SaveConfigButton(discord.ui.Button):
                               description=f"Using **{data.get('preset')}** preset.",
                               color=discord.Color.magenta())
 
-        def field_val(lst, fmt=str): return ", ".join(map(fmt, lst)) if lst else "None"
+        def field_val(lst: list[Any], fmt: Callable[[Any], str] = str) -> str:
+            return ", ".join(map(fmt, lst)) if lst else "None"
 
         embed.add_field(name="🧠 Regex", value=f"```\n{chr(10).join(rule_data.get('regex_patterns', []))}```" or "None", inline=False)
         embed.add_field(name="📝 Blocked Keywords", value=field_val(rule_data.get("keyword_filter", [])), inline=False)
@@ -161,8 +161,26 @@ class AutoModManager(commands.Cog):
     @app_commands.checks.has_permissions(manage_guild=True)
     @command_enabled()
     async def setup_automod(self, interaction: discord.Interaction):
-        log_channel = discord.utils.get(interaction.guild.text_channels, name="mod-logs") or interaction.channel
-        view = AutoModSettingsView(log_channel, interaction.guild)
+        guild = interaction.guild
+        if guild is None:
+            return await interaction.response.send_message(
+                "This command can only be used in a server.",
+                ephemeral=True,
+            )
+
+        resolved = discord.utils.get(guild.text_channels, name="mod-logs")
+        if not isinstance(resolved, discord.TextChannel):
+            if isinstance(interaction.channel, discord.TextChannel):
+                resolved = interaction.channel
+            elif guild.text_channels:
+                resolved = guild.text_channels[0]
+            else:
+                return await interaction.response.send_message(
+                    "No usable text channel was found for AutoMod setup.",
+                    ephemeral=True,
+                )
+
+        view = AutoModSettingsView(resolved, guild)
         await interaction.response.send_message(
             "🔧 Use the menu below to configure AutoMod settings.", view=view, ephemeral=True
         )

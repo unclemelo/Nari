@@ -1,9 +1,9 @@
 import discord
-from discord.ext import commands
 import time
 from typing import Literal
 
-SUPPORT_SERVER_ID = lambda interaction: interaction.user.id
+def support_server_id(interaction: discord.Interaction) -> int:
+    return interaction.user.id
 
 BUCKET_TYPES = {
     "user": lambda interaction: interaction.user.id,
@@ -25,7 +25,7 @@ class BoosterCooldownManager:
         now = time.time()
 
         # Get member for booster check
-        guild = interaction.client.get_guild(SUPPORT_SERVER_ID)
+        guild = interaction.client.get_guild(support_server_id(interaction))
         member = guild.get_member(interaction.user.id) if guild else None
         cooldown_period = self.per * 0.7 if member and member.premium_since else self.per
 

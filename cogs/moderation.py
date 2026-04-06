@@ -5,9 +5,8 @@ import os
 from discord import app_commands
 from discord.ext import commands
 from datetime import timedelta
-from util.command_checks import command_enabled
 import asyncio
-from typing import Optional
+from typing import Optional, cast
 
 
 WARN_FILE = 'data/warns.json'
@@ -40,7 +39,12 @@ class Moderation(commands.Cog):
     def ensure_guild_user(self, guild_id: str, user_id: str):
         self.warnings.setdefault(guild_id, {}).setdefault(user_id, [])
 
-    def build_embed(self, title: str, description: str = None, color: discord.Color = discord.Color.blurple()):
+    def build_embed(
+        self,
+        title: str,
+        description: Optional[str] = None,
+        color: discord.Color = discord.Color.blurple(),
+    ):
         embed = discord.Embed(title=title, description=description, color=color)
         embed.set_footer(text="Nari Moderation System")
         return embed
@@ -51,10 +55,10 @@ class Moderation(commands.Cog):
             return
         channel_id = self.log_channels[guild_id]
         channel = guild.get_channel(channel_id)
-        if channel:
+        if isinstance(channel, (discord.TextChannel, discord.Thread)):
             await channel.send(embed=embed)
 
-    async def dm_user(self, member: discord.Member, embed: discord.Embed):
+    async def dm_user(self, member: discord.User | discord.Member, embed: discord.Embed):
         try:
             await member.send(embed=embed)
         except discord.Forbidden:
@@ -63,20 +67,30 @@ class Moderation(commands.Cog):
     async def respond_and_delete(
         self,
         interaction: discord.Interaction,
-        content=None,
-        embed: discord.Embed = None,
-        ephemeral=True,
-        delay=5
+        content: Optional[str] = None,
+        embed: Optional[discord.Embed] = None,
+        ephemeral: bool = True,
+        delay: int = 5,
     ):
         """
         Respond immediately to an interaction, then auto-delete after a delay.
         Supports text or embed.
         """
         try:
-            await interaction.response.send_message(content=content, embed=embed, ephemeral=ephemeral)
+            if content is not None and embed is not None:
+                await interaction.response.send_message(content=content, embed=embed, ephemeral=ephemeral)
+            elif embed is not None:
+                await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+            else:
+                await interaction.response.send_message(content=content or "", ephemeral=ephemeral)
         except discord.errors.InteractionResponded:
             # fallback if already responded
-            await interaction.followup.send(content=content, embed=embed, ephemeral=ephemeral)
+            if content is not None and embed is not None:
+                await interaction.followup.send(content=content, embed=embed, ephemeral=ephemeral)
+            elif embed is not None:
+                await interaction.followup.send(embed=embed, ephemeral=ephemeral)
+            else:
+                await interaction.followup.send(content=content or "", ephemeral=ephemeral)
 
         # Delete after delay
         try:
@@ -114,7 +128,11 @@ class Moderation(commands.Cog):
 
         embed.add_field(
             name="Moderator",
-            value=f"{moderator.mention} (`{moderator.id}`)",
+            value=(
+                f"{moderator.mention} (`{moderator.id}`)"
+                if moderator
+                else "Unknown"
+            ),
             inline=False
         )
 
@@ -127,12 +145,14 @@ class Moderation(commands.Cog):
 
         # Show what changed (if Discord provides it)
         if entry.changes:
-            for change in entry.changes:
-                before = change.before if change.before is not None else "None"
-                after = change.after if change.after is not None else "None"
+            for change in cast(list[object], entry.changes):
+                before_value = getattr(change, "before", None)
+                after_value = getattr(change, "after", None)
+                before = before_value if before_value is not None else "None"
+                after = after_value if after_value is not None else "None"
 
                 embed.add_field(
-                    name=change.attribute.replace("_", " ").title(),
+                    name=str(getattr(change, "attribute", "changed")).replace("_", " ").title(),
                     value=f"**Before:** {before}\n**After:** {after}",
                     inline=False
                 )
@@ -152,7 +172,11 @@ class Moderation(commands.Cog):
     @app_commands.command(name="setlogs", description="Set the channel for moderation logs.")
     @app_commands.checks.has_permissions(manage_guild=True)
     async def setlogs_cmd(self, interaction: discord.Interaction, channel: discord.TextChannel):
-        guild_id = str(interaction.guild.id)
+        guild = interaction.guild
+        if guild is None:
+            return await self.respond_and_delete(interaction, content="This command can only be used in a server.")
+
+        guild_id = str(guild.id)
         self.log_channels[guild_id] = channel.id
         await self.save_json(LOG_FILE, self.log_channels)
 
@@ -169,7 +193,11 @@ class Moderation(commands.Cog):
     @app_commands.command(name="warnings", description="Check all warnings for a user.")
     @app_commands.checks.has_permissions(manage_messages=True)
     async def warnings_cmd(self, interaction: discord.Interaction, member: discord.Member):
-        guild_id, user_id = str(interaction.guild.id), str(member.id)
+        guild = interaction.guild
+        if guild is None:
+            return await self.respond_and_delete(interaction, content="This command can only be used in a server.")
+
+        guild_id, user_id = str(guild.id), str(member.id)
         self.ensure_guild_user(guild_id, user_id)
 
         warns = self.warnings[guild_id][user_id]
@@ -190,7 +218,11 @@ class Moderation(commands.Cog):
     @app_commands.command(name="delwarn", description="Delete a specific warning from a user.")
     @app_commands.checks.has_permissions(manage_messages=True)
     async def delwarn_cmd(self, interaction: discord.Interaction, member: discord.Member, index: int):
-        guild_id, user_id = str(interaction.guild.id), str(member.id)
+        guild = interaction.guild
+        if guild is None:
+            return await self.respond_and_delete(interaction, content="This command can only be used in a server.")
+
+        guild_id, user_id = str(guild.id), str(member.id)
         self.ensure_guild_user(guild_id, user_id)
 
         warns = self.warnings[guild_id][user_id]
@@ -212,14 +244,18 @@ class Moderation(commands.Cog):
             discord.Color.orange()
         )
         log_embed.set_thumbnail(url=member.display_avatar.url)
-        await self.send_mod_log(interaction.guild, log_embed)
+        await self.send_mod_log(guild, log_embed)
 
         await self.respond_and_delete(interaction, embed=self.build_embed(f"🗑️ Removed warning #{index} from {member.display_name}.", color=discord.Color.orange()))
 
     @app_commands.command(name="clearwarns", description="Clear all warnings from a user.")
     @app_commands.checks.has_permissions(manage_messages=True)
     async def clearwarns_cmd(self, interaction: discord.Interaction, member: discord.Member):
-        guild_id, user_id = str(interaction.guild.id), str(member.id)
+        guild = interaction.guild
+        if guild is None:
+            return await self.respond_and_delete(interaction, content="This command can only be used in a server.")
+
+        guild_id, user_id = str(guild.id), str(member.id)
         self.ensure_guild_user(guild_id, user_id)
 
         if not self.warnings[guild_id][user_id]:
@@ -238,7 +274,7 @@ class Moderation(commands.Cog):
             discord.Color.green()
         )
         log_embed.set_thumbnail(url=member.display_avatar.url)
-        await self.send_mod_log(interaction.guild, log_embed)
+        await self.send_mod_log(guild, log_embed)
 
         await self.respond_and_delete(interaction, embed=self.build_embed(f"🧹 Cleared {count} warnings from {member.display_name}.", color=discord.Color.green()))
         
@@ -263,7 +299,14 @@ class Moderation(commands.Cog):
                 content="❌ Amount must be 0 or higher."
             )
 
+        guild = interaction.guild
+        if guild is None:
+            return await self.respond_and_delete(interaction, content="This command can only be used in a server.")
+
         channel = interaction.channel
+        if not isinstance(channel, (discord.TextChannel, discord.Thread)):
+            return await self.respond_and_delete(interaction, content="This channel type is not supported for purge.")
+
         await interaction.response.defer(ephemeral=True)
 
         deleted = 0
@@ -308,7 +351,7 @@ class Moderation(commands.Cog):
             f"**Deleted:** {deleted}",
             discord.Color.red()
         )
-        await self.send_mod_log(interaction.guild, log_embed)
+        await self.send_mod_log(guild, log_embed)
 
         # ─── Confirmation ────────────────────────────
         await interaction.followup.send(
@@ -324,13 +367,17 @@ class Moderation(commands.Cog):
     @app_commands.command(name="mute", description="Temporarily mute a user using Discord's timeout system.")
     @app_commands.checks.has_permissions(moderate_members=True)
     async def mute_cmd(self, interaction: discord.Interaction, member: discord.Member, minutes: int, reason: str = "No reason provided"):
+        guild = interaction.guild
+        if guild is None or not isinstance(interaction.user, discord.Member):
+            return await self.respond_and_delete(interaction, content="This command can only be used in a server.")
+
         if member.top_role >= interaction.user.top_role:
             return await self.respond_and_delete(interaction, content="You can't mute someone with an equal or higher role.")
 
         try:
             await member.timeout(discord.utils.utcnow() + timedelta(minutes=minutes), reason=reason)
 
-            dm_embed = self.build_embed("🔇 You’ve been muted!", f"Server: **{interaction.guild.name}**\nReason: {reason}\nDuration: {minutes} minutes.")
+            dm_embed = self.build_embed("🔇 You’ve been muted!", f"Server: **{guild.name}**\nReason: {reason}\nDuration: {minutes} minutes.")
             await self.dm_user(member, dm_embed)
 
             log_embed = self.build_embed(
@@ -343,7 +390,7 @@ class Moderation(commands.Cog):
                 discord.Color.blue()
             )
             log_embed.set_thumbnail(url=member.display_avatar.url)
-            await self.send_mod_log(interaction.guild, log_embed)
+            await self.send_mod_log(guild, log_embed)
 
             await self.respond_and_delete(interaction, embed=self.build_embed(f"🤐 {member.display_name} muted!", f"Duration: {minutes} minutes", discord.Color.blue()))
         except Exception as e:
@@ -352,10 +399,14 @@ class Moderation(commands.Cog):
     @app_commands.command(name="warn", description="Warn a user and log it.")
     @app_commands.checks.has_permissions(manage_messages=True)
     async def warn_cmd(self, interaction: discord.Interaction, member: discord.Member, reason: str = "No reason provided"):
+        guild = interaction.guild
+        if guild is None:
+            return await self.respond_and_delete(interaction, content="This command can only be used in a server.")
+
         if member.bot:
             return await self.respond_and_delete(interaction, content="You cannot warn a bot.")
 
-        guild_id, user_id = str(interaction.guild.id), str(member.id)
+        guild_id, user_id = str(guild.id), str(member.id)
         self.ensure_guild_user(guild_id, user_id)
         self.warnings[guild_id][user_id].append({
             "reason": reason,
@@ -366,7 +417,7 @@ class Moderation(commands.Cog):
 
         await self.respond_and_delete(interaction, embed=self.build_embed(f"⚠️ Warned {member.display_name}", f"Reason: {reason}", discord.Color.yellow()))
 
-        dm_embed = self.build_embed("⚠️ You’ve received a warning!", f"Server: **{interaction.guild.name}**\nReason: {reason}")
+        dm_embed = self.build_embed("⚠️ You’ve received a warning!", f"Server: **{guild.name}**\nReason: {reason}")
         await self.dm_user(member, dm_embed)
 
         log_embed = self.build_embed(
@@ -378,16 +429,20 @@ class Moderation(commands.Cog):
             discord.Color.yellow()
         )
         log_embed.set_thumbnail(url=member.display_avatar.url)
-        await self.send_mod_log(interaction.guild, log_embed)
+        await self.send_mod_log(guild, log_embed)
 
     @app_commands.command(name="kick", description="Kick a user from the server.")
     @app_commands.checks.has_permissions(kick_members=True)
     async def kick_cmd(self, interaction: discord.Interaction, member: discord.Member, reason: str = "No reason provided"):
+        guild = interaction.guild
+        if guild is None or not isinstance(interaction.user, discord.Member):
+            return await self.respond_and_delete(interaction, content="This command can only be used in a server.")
+
         if member.top_role >= interaction.user.top_role:
             return await self.respond_and_delete(interaction, content="You can't kick someone with an equal or higher role.")
 
         try:
-            dm_embed = self.build_embed("🥾 You’ve been kicked!", f"Server: **{interaction.guild.name}**\nReason: {reason}")
+            dm_embed = self.build_embed("🥾 You’ve been kicked!", f"Server: **{guild.name}**\nReason: {reason}")
             await self.dm_user(member, dm_embed)
             await member.kick(reason=reason)
 
@@ -400,7 +455,7 @@ class Moderation(commands.Cog):
                 discord.Color.orange()
             )
             log_embed.set_thumbnail(url=member.display_avatar.url)
-            await self.send_mod_log(interaction.guild, log_embed)
+            await self.send_mod_log(guild, log_embed)
 
             await self.respond_and_delete(interaction, embed=self.build_embed(f"🥾 {member.display_name} kicked!", f"Reason: {reason}", discord.Color.orange()))
         except Exception as e:
@@ -414,6 +469,10 @@ class Moderation(commands.Cog):
         member: discord.Member,
         reason: str = "No reason provided",
     ):
+        guild = interaction.guild
+        if guild is None or not isinstance(interaction.user, discord.Member):
+            return await self.respond_and_delete(interaction, content="This command can only be used in a server.")
+
         # ACK IMMEDIATELY
         await interaction.response.defer(thinking=True)
 
@@ -429,7 +488,7 @@ class Moderation(commands.Cog):
             try:
                 dm_embed = self.build_embed(
                     "🔨 You’ve been banned!",
-                    f"Server: **{interaction.guild.name}**\nReason: {reason}"
+                    f"Server: **{guild.name}**\nReason: {reason}"
                 )
                 await member.send(embed=dm_embed)
             except discord.Forbidden:
@@ -448,7 +507,7 @@ class Moderation(commands.Cog):
                 discord.Color.red()
             )
             log_embed.set_thumbnail(url=member.display_avatar.url)
-            await self.send_mod_log(interaction.guild, log_embed)
+            await self.send_mod_log(guild, log_embed)
 
             # Success response
             await interaction.followup.send(
@@ -475,10 +534,14 @@ class Moderation(commands.Cog):
     @app_commands.command(name="unban", description="Unban a user by their ID.")
     @app_commands.checks.has_permissions(ban_members=True)
     async def unban_cmd(self, interaction: discord.Interaction, member: discord.User, reason: str = "No reason provided"):
+        guild = interaction.guild
+        if guild is None:
+            return await self.respond_and_delete(interaction, content="This command can only be used in a server.")
+
         try:
-            dm_embed = self.build_embed("🔨 You’ve been unbanned!", f"Server: **{interaction.guild.name}**\nReason: {reason}")
+            dm_embed = self.build_embed("🔨 You’ve been unbanned!", f"Server: **{guild.name}**\nReason: {reason}")
             await self.dm_user(member, dm_embed)
-            await interaction.guild.unban(member, reason=reason)
+            await guild.unban(member, reason=reason)
 
             log_embed = self.build_embed(
                 "✨ User Unbanned",
@@ -488,7 +551,7 @@ class Moderation(commands.Cog):
                 f"**Timestamp:** <t:{int(discord.utils.utcnow().timestamp())}:F>",
                 discord.Color.green()
             )
-            await self.send_mod_log(interaction.guild, log_embed)
+            await self.send_mod_log(guild, log_embed)
 
             await self.respond_and_delete(interaction, embed=self.build_embed(f"✨ {member.name} unbanned!", "Let's hope they behave this time.", discord.Color.green()))
         except Exception as e:

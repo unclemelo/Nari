@@ -42,7 +42,8 @@ class ReplyButton(discord.ui.View):
 
         # 🔒 Disable the button
         button.disabled = True
-        await interaction.message.edit(view=self)
+        if interaction.message:
+            await interaction.message.edit(view=self)
 
         await interaction.response.send_message(embed=embed)
 

@@ -51,15 +51,19 @@ status_messages = [
     "🍋 | I'm a goofer. :3",
     "⚙️ | Type /help for commands!"
 ]
+status_index = 0
 
 @tasks.loop(seconds=10)
 async def update_status_loop():
+    global status_index
+
     try:
         guild_count = len(client.guilds)
         latency = round(client.latency * 1000)
         latency_message = "📡 | Ping: 999+ms" if latency > 999 else f"📡 | Ping: {latency}ms"
         all_statuses = status_messages + [latency_message]
-        current = all_statuses[update_status_loop.current_loop % len(all_statuses)].format(guild_count=guild_count)
+        current = all_statuses[status_index % len(all_statuses)].format(guild_count=guild_count)
+        status_index += 1
         await client.change_presence(
             status=discord.Status.dnd,
             activity=discord.Activity(type=discord.ActivityType.watching, name=current)
@@ -72,7 +76,8 @@ async def update_status_loop():
 @client.event
 async def on_ready():
     terminal_banner()
-    log(f"System online as {client.user} ({client.user.id})", "success")
+    if client.user:
+        log(f"System online as {client.user} ({client.user.id})", "success")
     log(f"Connected to {len(client.guilds)} guilds.", "info")
 
     try:
@@ -118,6 +123,8 @@ async def main():
 
     try:
         log("Starting Nari client...", "info")
+        if not TOKEN:
+            raise RuntimeError("TOKEN is not set in environment variables")
         await client.start(TOKEN)
     except KeyboardInterrupt:
         log("Manual shutdown requested (Ctrl+C)", "warn")

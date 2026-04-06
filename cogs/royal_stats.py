@@ -1,4 +1,6 @@
-import discord, json, os, random
+import discord
+import json
+import os
 from discord.ext import commands
 from discord import app_commands
 
@@ -117,9 +119,13 @@ class RoyalStats(commands.Cog):
 
     # --- Commands ---
     @app_commands.command(name="royalstats", description="Check your Royal stats and prestige progress.")
-    async def royalstats(self, interaction: discord.Interaction, member: discord.Member = None):
-        member = member or interaction.user
-        user = self.get_user(member.id)
+    async def royalstats(
+        self,
+        interaction: discord.Interaction,
+        member: discord.Member | discord.User | None = None,
+    ):
+        target: discord.abc.User = member or interaction.user
+        user = self.get_user(target.id)
 
         kills, deaths, revives = user["kills"], user["deaths"], user["revives"]
         xp, level, prestige = user["xp"], user["level"], user["prestige"]
@@ -128,9 +134,10 @@ class RoyalStats(commands.Cog):
 
         title, emoji, color = self.get_prestige_tier(prestige)
         progress_bar = self.xp_bar(xp, self.xp_needed(level))
+        display_name = target.display_name if isinstance(target, discord.Member) else target.name
 
         embed = discord.Embed(
-            title=f"{emoji} {member.display_name}'s Royal Stats",
+            title=f"{emoji} {display_name}'s Royal Stats",
             description=f"**Prestige:** {title} {prestige_stars or '—'}",
             color=color
         )
@@ -142,8 +149,8 @@ class RoyalStats(commands.Cog):
         embed.add_field(name="XP", value=f"✨ {xp}/{self.xp_needed(level)}\n`{progress_bar}`", inline=False)
 
         view = None
-        if member.id == interaction.user.id and level >= self.max_level:
-            view = PrestigeButton(member.id, self)
+        if target.id == interaction.user.id and level >= self.max_level:
+            view = PrestigeButton(target.id, self)
 
         if view:
             await interaction.response.send_message(embed=embed, view=view)
@@ -167,6 +174,12 @@ class RoyalStats(commands.Cog):
             return await interaction.response.send_message("No stats recorded yet!", ephemeral=True)
 
         desc = []
+        if interaction.guild is None:
+            return await interaction.response.send_message(
+                "This command can only be used in a server.",
+                ephemeral=True,
+            )
+
         for i, (uid, stats) in enumerate(top, 1):
             user = interaction.guild.get_member(int(uid))
             name = user.display_name if user else f"User {uid}"

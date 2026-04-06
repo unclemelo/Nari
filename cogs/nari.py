@@ -14,7 +14,7 @@ class Nari(commands.Cog):
         self.start_time = time.time()
         self.update_stats.start()
 
-    def cog_unload(self):
+    async def cog_unload(self):
         self.update_stats.cancel()
 
     def format_uptime(self):
@@ -51,7 +51,7 @@ class Nari(commands.Cog):
         await self.bot.wait_until_ready()
         channel = self.bot.get_channel(CHANNEL_ID)
 
-        if not channel:
+        if not isinstance(channel, discord.TextChannel):
             return
 
         embed = self.build_embed()

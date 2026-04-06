@@ -1,4 +1,8 @@
-import discord, random, asyncio, json, os
+import discord
+import random
+import asyncio
+import json
+import os
 from typing import Any, Optional
 from discord.ext import commands, tasks
 from discord import app_commands
@@ -109,7 +113,8 @@ class Knockout(commands.Cog):
     def load_stats(self):
         os.makedirs(os.path.dirname(STATS_FILE), exist_ok=True)
         if not os.path.exists(STATS_FILE):
-            with open(STATS_FILE, "w") as f: json.dump({}, f)
+            with open(STATS_FILE, "w") as f:
+                json.dump({}, f)
         with open(STATS_FILE, "r") as f:
             return json.load(f)
 
@@ -126,7 +131,8 @@ class Knockout(commands.Cog):
     def load_deathlog(self):
         os.makedirs(os.path.dirname(DEATHLOG_FILE), exist_ok=True)
         if not os.path.exists(DEATHLOG_FILE):
-            with open(DEATHLOG_FILE, "w") as f: json.dump({}, f)
+            with open(DEATHLOG_FILE, "w") as f:
+                json.dump({}, f)
         with open(DEATHLOG_FILE, "r") as f:
             return json.load(f)
 
@@ -229,7 +235,6 @@ class Knockout(commands.Cog):
     @command_enabled()
     async def knockoutcmd(self, interaction: discord.Interaction, member: discord.Member):
         import random
-        from datetime import timedelta
 
         await interaction.response.defer(thinking=True, ephemeral=False)
 
@@ -371,7 +376,7 @@ class Knockout(commands.Cog):
             print(f"[Royale] knockout error: {e}")
             try:
                 await interaction.followup.send("⚠️ Something went wrong while performing the knockout.", ephemeral=True)
-            except:
+            except Exception:
                 pass
 
     @app_commands.command(name="revive", description="Attempt to revive (clear timeout) for a knocked-out user.")
